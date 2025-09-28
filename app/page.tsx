@@ -609,7 +609,7 @@ function StudyCard({ card, isActive, onAnswer }: StudyCardProps) {
               transition={{
                 duration: 3,
                 delay: Math.random() * 0.8,
-                ease: [0.4, 0, 0.6, 1],
+                ease: [0.25, 0.46, 0.45, 0.94],
               }}
               className="absolute text-2xl"
             >
@@ -666,7 +666,7 @@ function StudyCard({ card, isActive, onAnswer }: StudyCardProps) {
               transition={{
                 duration: 4,
                 delay: 1 + Math.random() * 2,
-                ease: [0.4, 0, 0.6, 1],
+                ease: [0.25, 0.46, 0.45, 0.94],
               }}
               className="absolute text-3xl"
             >
