@@ -132,10 +132,12 @@ const studyCards = [
   },
 ]
 
-function HomePage({ onStartStudying, setCurrentView, selectedSubject }: { 
+function HomePage({ onStartStudying, setCurrentView, selectedSubject, customThumbnail, onUploadThumbnail }: { 
   onStartStudying: () => void; 
   setCurrentView: (view: "home" | "study" | "profile" | "search" | "notifications") => void;
   selectedSubject?: string;
+  customThumbnail?: string | null;
+  onUploadThumbnail: () => void;
 }) {
   const [currentProjectIndex, setCurrentProjectIndex] = useState(0)
   const [likedProjects, setLikedProjects] = useState<Set<number>>(new Set())
@@ -228,7 +230,7 @@ function HomePage({ onStartStudying, setCurrentView, selectedSubject }: {
       <header className="absolute top-0 left-0 right-0 z-50 flex items-center justify-between p-4 glass-effect">
         <div className="flex items-center gap-3">
           <StudyTokLogo size="md" animated={false} />
-          <span className="text-xl font-bold">StudyTok</span>
+          <span className="text-xl font-bold">🎓 StudyTok</span>
         </div>
         <div className="flex items-center gap-4">
           <div className="text-sm">
@@ -239,6 +241,13 @@ function HomePage({ onStartStudying, setCurrentView, selectedSubject }: {
             <span>🔥</span>
             <span>15</span>
           </div>
+          <button 
+            onClick={onUploadThumbnail}
+            className="p-2 rounded-full glass-effect hover:bg-muted/30 transition-colors"
+            title="📤 Upload Custom Thumbnail"
+          >
+            <span className="text-lg">📤</span>
+          </button>
           <Search className="w-6 h-6 text-muted-foreground" />
         </div>
       </header>
@@ -253,14 +262,15 @@ function HomePage({ onStartStudying, setCurrentView, selectedSubject }: {
               transition={{ duration: 0.36, ease: [0.2, 0.8, 0.2, 1] }}
               className="relative w-full h-screen flex flex-col justify-center p-4 pb-32"
             >
-              {/* Background image */}
+              {/* Background image with improved contrast */}
               <div className="absolute inset-0">
                 <img
-                  src={project.thumbnail || "/placeholder.svg"}
+                  src={customThumbnail || project.thumbnail || "/placeholder.svg"}
                   alt={project.title}
-                  className="w-full h-full object-cover opacity-20"
+                  className="w-full h-full object-cover opacity-30"
+                  style={{ filter: 'brightness(0.8) contrast(1.3) saturate(1.2)' }}
                 />
-                <div className="absolute inset-0 bg-gradient-to-t from-background via-background/50 to-transparent" />
+                <div className="absolute inset-0 bg-gradient-to-t from-background via-background/60 to-transparent" />
               </div>
 
               {/* Content */}
@@ -273,7 +283,7 @@ function HomePage({ onStartStudying, setCurrentView, selectedSubject }: {
                   className="flex items-center gap-2 mb-4"
                 >
                   <span className="text-2xl">{project.emoji}</span>
-                  <span className="text-sm font-medium text-primary">{project.subject}</span>
+                  <span className="text-sm font-medium text-primary">📚 {project.subject}</span>
                   <span className="text-xs px-2 py-1 rounded-full bg-muted text-muted-foreground flex items-center gap-1">
                     <span>{project.difficultyEmoji}</span>
                     {project.difficulty}
@@ -1064,6 +1074,8 @@ export default function StudyApp() {
   const [isLoading, setIsLoading] = useState(true)
   const [selectedSubject, setSelectedSubject] = useState<string | undefined>(undefined)
   const [currentIndex, setCurrentIndex] = useState(0)
+  const [customThumbnail, setCustomThumbnail] = useState<string | null>(null)
+  const [showUploadModal, setShowUploadModal] = useState(false)
   const [score, setScore] = useState(2450)
   const [streak, setStreak] = useState(15)
   const [liked, setLiked] = useState<Set<number>>(new Set())
@@ -1140,6 +1152,18 @@ export default function StudyApp() {
     })
   }
 
+  const handleThumbnailUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0]
+    if (file) {
+      const reader = new FileReader()
+      reader.onload = (e) => {
+        setCustomThumbnail(e.target?.result as string)
+        setShowUploadModal(false)
+      }
+      reader.readAsDataURL(file)
+    }
+  }
+
   useEffect(() => {
     const feedElement = feedRef.current
     if (feedElement) {
@@ -1162,7 +1186,47 @@ export default function StudyApp() {
   }
 
   if (currentView === "home") {
-    return <HomePage onStartStudying={() => setCurrentView("study")} setCurrentView={setCurrentView} selectedSubject={selectedSubject} />
+    return (
+      <>
+        <HomePage 
+          onStartStudying={() => setCurrentView("study")} 
+          setCurrentView={setCurrentView} 
+          selectedSubject={selectedSubject}
+          customThumbnail={customThumbnail}
+          onUploadThumbnail={() => setShowUploadModal(true)}
+        />
+        {showUploadModal && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm">
+            <div className="bg-background rounded-xl p-6 max-w-md mx-4 glass-effect">
+              <h3 className="text-xl font-bold mb-4">📤 Upload Custom Thumbnail</h3>
+              <p className="text-muted-foreground mb-4">
+                Choose a custom image for your study deck background! 🎨
+              </p>
+              <input
+                type="file"
+                accept="image/*"
+                onChange={handleThumbnailUpload}
+                className="w-full p-2 border rounded-lg mb-4"
+              />
+              <div className="flex gap-2">
+                <button
+                  onClick={() => setShowUploadModal(false)}
+                  className="flex-1 px-4 py-2 bg-muted text-muted-foreground rounded-lg hover:bg-muted/80 transition-colors"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={() => setCustomThumbnail(null)}
+                  className="flex-1 px-4 py-2 bg-secondary text-secondary-foreground rounded-lg hover:bg-secondary/80 transition-colors"
+                >
+                  Reset to Default
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+      </>
+    )
   }
 
   if (currentView === "profile") {
