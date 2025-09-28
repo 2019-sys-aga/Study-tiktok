@@ -6,6 +6,7 @@ import { Heart, Bot, Share, Bookmark, Home, Search, Plus, Bell, User, Play, Trop
 import { Button } from "@/components/ui/button"
 import { Progress } from "@/components/ui/progress"
 import { StudyTokLogo, LoadingScreen } from "@/components/logo"
+import SupabaseTest from "@/components/supabase-test"
 
 const pastProjects = [
   {
@@ -1139,11 +1140,21 @@ function ProfilePage({ onBack, setCurrentView }: { onBack: () => void; setCurren
             <p className="text-muted-foreground">Level {userStats.level} • {userStats.favoriteSubject} Enthusiast</p>
           </motion.div>
 
-          {/* Stats Grid */}
+          {/* Supabase Connection Test */}
           <motion.div
             initial={{ y: 20, opacity: 0 }}
             animate={{ y: 0, opacity: 1 }}
             transition={{ delay: 0.1 }}
+            className="mb-6"
+          >
+            <SupabaseTest />
+          </motion.div>
+
+          {/* Stats Grid */}
+          <motion.div
+            initial={{ y: 20, opacity: 0 }}
+            animate={{ y: 0, opacity: 1 }}
+            transition={{ delay: 0.2 }}
             className="grid grid-cols-2 gap-4"
           >
             <div className="p-4 rounded-xl glass-effect text-center">
