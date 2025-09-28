@@ -723,11 +723,46 @@ function SearchPage({ onBack, setCurrentView, onSelectSubject }: {
 }) {
   const [searchQuery, setSearchQuery] = useState("")
   const [searchResults] = useState([
-    { id: 1, title: "Calculus Derivatives", subject: "Mathematics", difficulty: "Advanced", likes: 1234 },
-    { id: 2, title: "Physics Laws of Motion", subject: "Physics", difficulty: "Medium", likes: 856 },
-    { id: 3, title: "Chemistry Periodic Table", subject: "Chemistry", difficulty: "Easy", likes: 2103 },
-    { id: 4, title: "Biology Cell Structure", subject: "Biology", difficulty: "Medium", likes: 1456 },
+    { id: 1, title: "Calculus Derivatives", subject: "Mathematics", difficulty: "Advanced", likes: 1234, emoji: "📊" },
+    { id: 2, title: "Physics Laws of Motion", subject: "Physics", difficulty: "Medium", likes: 856, emoji: "⚡" },
+    { id: 3, title: "Chemistry Periodic Table", subject: "Chemistry", difficulty: "Easy", likes: 2103, emoji: "🧪" },
+    { id: 4, title: "Biology Cell Structure", subject: "Biology", difficulty: "Medium", likes: 1456, emoji: "🧬" },
+    { id: 5, title: "Algebra Basics", subject: "Mathematics", difficulty: "Easy", likes: 987, emoji: "📐" },
+    { id: 6, title: "Organic Chemistry", subject: "Chemistry", difficulty: "Advanced", likes: 1789, emoji: "⚗️" },
   ])
+  const [filteredResults, setFilteredResults] = useState(searchResults)
+  const [showSuggestions, setShowSuggestions] = useState(false)
+
+  // Real-time search filtering
+  useEffect(() => {
+    if (searchQuery.trim() === "") {
+      setFilteredResults(searchResults)
+      setShowSuggestions(false)
+    } else {
+      const filtered = searchResults.filter(result => 
+        result.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        result.subject.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        result.difficulty.toLowerCase().includes(searchQuery.toLowerCase())
+      )
+      setFilteredResults(filtered)
+      setShowSuggestions(true)
+    }
+  }, [searchQuery, searchResults])
+
+  // Auto-navigate to matching deck
+  const handleSearchSubmit = () => {
+    if (searchQuery.trim() === "") return
+    
+    const exactMatch = searchResults.find(result => 
+      result.subject.toLowerCase() === searchQuery.toLowerCase() ||
+      result.title.toLowerCase().includes(searchQuery.toLowerCase())
+    )
+    
+    if (exactMatch) {
+      onSelectSubject(exactMatch.subject)
+      setCurrentView("home")
+    }
+  }
 
   return (
     <div className="relative w-full h-screen overflow-hidden bg-background">
@@ -767,12 +802,49 @@ function SearchPage({ onBack, setCurrentView, onSelectSubject }: {
           >
             <input
               type="text"
-              placeholder="Search for topics, subjects, or questions..."
+              placeholder="🔍 Search for topics, subjects, or questions... (try 'Calculus', 'Biology', 'Chemistry')"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
+              onKeyPress={(e) => e.key === 'Enter' && handleSearchSubmit()}
               className="w-full p-4 bg-muted/50 border border-border rounded-xl focus:outline-none focus:ring-2 focus:ring-primary text-foreground text-lg"
             />
-            <Search className="absolute right-4 top-1/2 -translate-y-1/2 w-6 h-6 text-muted-foreground" />
+            {searchQuery ? (
+              <button
+                onClick={() => setSearchQuery("")}
+                className="absolute right-4 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground text-xl"
+              >
+                ✕
+              </button>
+            ) : (
+              <Search className="absolute right-4 top-1/2 -translate-y-1/2 w-6 h-6 text-muted-foreground" />
+            )}
+            
+            {/* Real-time suggestions */}
+            {showSuggestions && filteredResults.length > 0 && (
+              <motion.div
+                initial={{ y: -10, opacity: 0 }}
+                animate={{ y: 0, opacity: 1 }}
+                className="absolute top-full left-0 right-0 mt-2 bg-background border border-border rounded-xl shadow-lg z-10 max-h-60 overflow-y-auto"
+              >
+                {filteredResults.map((result, index) => (
+                  <div
+                    key={result.id}
+                    onClick={() => {
+                      onSelectSubject(result.subject)
+                      setCurrentView("home")
+                    }}
+                    className="p-3 hover:bg-muted/30 cursor-pointer border-b border-border last:border-b-0 flex items-center gap-3"
+                  >
+                    <span className="text-xl">{result.emoji}</span>
+                    <div className="flex-1">
+                      <div className="font-medium">{result.title}</div>
+                      <div className="text-sm text-muted-foreground">{result.subject} • {result.difficulty}</div>
+                    </div>
+                    <div className="text-sm text-primary font-medium">{result.likes} ❤️</div>
+                  </div>
+                ))}
+              </motion.div>
+            )}
           </motion.div>
 
           {/* Search Results */}
@@ -783,7 +855,7 @@ function SearchPage({ onBack, setCurrentView, onSelectSubject }: {
             className="space-y-4"
           >
             <h2 className="text-xl font-bold">📚 Popular Topics</h2>
-            {searchResults.map((result, index) => (
+            {filteredResults.map((result, index) => (
               <motion.div
                 key={result.id}
                 initial={{ y: 20, opacity: 0 }}
@@ -798,9 +870,12 @@ function SearchPage({ onBack, setCurrentView, onSelectSubject }: {
                 whileTap={{ scale: 0.98 }}
               >
                 <div className="flex items-center justify-between">
-                  <div>
-                    <h3 className="font-bold text-lg">{result.title}</h3>
-                    <p className="text-muted-foreground">{result.subject} • {result.difficulty}</p>
+                  <div className="flex items-center gap-3">
+                    <span className="text-2xl">{result.emoji}</span>
+                    <div>
+                      <h3 className="font-bold text-lg">{result.title}</h3>
+                      <p className="text-muted-foreground">{result.subject} • {result.difficulty}</p>
+                    </div>
                   </div>
                   <div className="text-right">
                     <div className="text-primary font-bold">{result.likes}</div>
@@ -842,12 +917,62 @@ function SearchPage({ onBack, setCurrentView, onSelectSubject }: {
 
 function NotificationsPage({ onBack, setCurrentView }: { onBack: () => void; setCurrentView: (view: "home" | "study" | "profile" | "search" | "notifications") => void }) {
   const [notifications] = useState([
-    { id: 1, title: "🔥 Streak Alert!", message: "You're on a 15-day streak! Keep it up!", time: "2m ago", unread: true },
-    { id: 2, title: "🎉 Achievement Unlocked!", message: "Math Wizard - Score 90%+ in Mathematics", time: "1h ago", unread: true },
-    { id: 3, title: "📚 New Content Available", message: "Advanced Calculus problems added to your feed", time: "3h ago", unread: false },
-    { id: 4, title: "👥 Study Buddy Request", message: "Sarah wants to study Physics with you", time: "1d ago", unread: false },
-    { id: 5, title: "🏆 Leaderboard Update", message: "You moved up to #3 in Mathematics!", time: "2d ago", unread: false },
+    {
+      id: 1,
+      title: "🎉 Achievement Unlocked!",
+      message: "You've completed 10 cards in Mathematics! Keep up the great work!",
+      time: "2 minutes ago",
+      type: "achievement",
+      read: false,
+      emoji: "🏆"
+    },
+    {
+      id: 2,
+      title: "🔥 Streak Alert!",
+      message: "You're on a 5-day study streak! Don't break it now!",
+      time: "1 hour ago",
+      type: "reminder",
+      read: false,
+      emoji: "⚡"
+    },
+    {
+      id: 3,
+      title: "📚 New Content Available",
+      message: "Advanced Calculus deck has been updated with 15 new cards!",
+      time: "3 hours ago",
+      type: "progress",
+      read: true,
+      emoji: "📖"
+    },
+    {
+      id: 4,
+      title: "👥 Social Update",
+      message: "Your friend Sarah just completed the Chemistry deck!",
+      time: "5 hours ago",
+      type: "social",
+      read: true,
+      emoji: "👫"
+    },
+    {
+      id: 5,
+      title: "🎯 Daily Goal",
+      message: "You're 2 cards away from completing your daily goal!",
+      time: "6 hours ago",
+      type: "reminder",
+      read: false,
+      emoji: "🎯"
+    },
+    {
+      id: 6,
+      title: "⭐ Level Up!",
+      message: "Congratulations! You've reached Level 3! New features unlocked!",
+      time: "1 day ago",
+      type: "achievement",
+      read: true,
+      emoji: "🌟"
+    }
   ])
+  const [unreadCount, setUnreadCount] = useState(notifications.filter(n => !n.read).length)
 
   return (
     <div className="relative w-full h-screen overflow-hidden bg-background">
@@ -891,18 +1016,38 @@ function NotificationsPage({ onBack, setCurrentView }: { onBack: () => void; set
                 initial={{ y: 20, opacity: 0 }}
                 animate={{ y: 0, opacity: 1 }}
                 transition={{ delay: 0.2 + index * 0.1 }}
-                className={`p-4 rounded-xl glass-effect transition-colors cursor-pointer ${
-                  notification.unread ? 'bg-primary/10 border-primary/20' : 'hover:bg-muted/30'
+                className={`p-4 rounded-xl glass-effect transition-all duration-200 cursor-pointer hover:scale-105 ${
+                  !notification.read ? 'bg-primary/10 border-l-4 border-primary' : 'bg-muted/30'
                 }`}
+                onClick={() => {
+                  // Mark as read when clicked
+                  if (!notification.read) {
+                    notification.read = true
+                    setUnreadCount(prev => prev - 1)
+                  }
+                }}
               >
                 <div className="flex items-start gap-3">
-                  <div className={`w-3 h-3 rounded-full mt-2 ${notification.unread ? 'bg-primary' : 'bg-muted'}`} />
+                  <span className="text-2xl">{notification.emoji}</span>
                   <div className="flex-1">
-                    <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2 mb-1">
                       <h3 className="font-bold text-lg">{notification.title}</h3>
-                      <span className="text-xs text-muted-foreground">{notification.time}</span>
+                      {!notification.read && (
+                        <div className="w-2 h-2 bg-primary rounded-full"></div>
+                      )}
                     </div>
-                    <p className="text-muted-foreground mt-1">{notification.message}</p>
+                    <p className="text-muted-foreground mb-2">{notification.message}</p>
+                    <div className="flex items-center justify-between">
+                      <span className="text-xs text-muted-foreground">{notification.time}</span>
+                      <span className={`text-xs px-2 py-1 rounded-full ${
+                        notification.type === 'achievement' ? 'bg-yellow-100 text-yellow-800' :
+                        notification.type === 'reminder' ? 'bg-blue-100 text-blue-800' :
+                        notification.type === 'progress' ? 'bg-green-100 text-green-800' :
+                        'bg-purple-100 text-purple-800'
+                      }`}>
+                        {notification.type}
+                      </span>
+                    </div>
                   </div>
                 </div>
               </motion.div>
