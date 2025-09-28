@@ -377,10 +377,10 @@ function HomePage({ onStartStudying, setCurrentView }: { onStartStudying: () => 
 
       {/* Bottom navigation */}
       <nav className="absolute bottom-0 left-0 right-0 z-50 flex items-center justify-around p-4 glass-effect">
-        <div className="flex flex-col items-center gap-1">
+        <button onClick={() => setCurrentView("home")} className="flex flex-col items-center gap-1">
           <Home className="w-6 h-6 text-primary" />
           <span className="text-xs">🏠</span>
-        </div>
+        </button>
         <button onClick={() => alert('Search functionality coming soon! 🔍')} className="flex flex-col items-center gap-1">
           <Search className="w-6 h-6 text-muted-foreground" />
           <span className="text-xs">🔍</span>
@@ -620,7 +620,7 @@ function StudyCard({ card, isActive, onAnswer }: StudyCardProps) {
   )
 }
 
-function ProfilePage({ onBack }: { onBack: () => void }) {
+function ProfilePage({ onBack, setCurrentView }: { onBack: () => void; setCurrentView: (view: "home" | "study" | "profile") => void }) {
   const [userStats] = useState({
     totalXP: 2450,
     streak: 15,
@@ -731,26 +731,26 @@ function ProfilePage({ onBack }: { onBack: () => void }) {
 
       {/* Bottom navigation */}
       <nav className="absolute bottom-0 left-0 right-0 z-50 flex items-center justify-around p-4 glass-effect">
-        <div className="flex flex-col items-center gap-1">
+        <button onClick={() => setCurrentView("home")} className="flex flex-col items-center gap-1">
           <Home className="w-6 h-6 text-muted-foreground" />
           <span className="text-xs">🏠</span>
-        </div>
-        <div className="flex flex-col items-center gap-1">
+        </button>
+        <button onClick={() => alert('Search functionality coming soon! 🔍')} className="flex flex-col items-center gap-1">
           <Search className="w-6 h-6 text-muted-foreground" />
           <span className="text-xs">🔍</span>
-        </div>
-        <div className="w-12 h-12 rounded-full bg-primary flex items-center justify-center relative">
+        </button>
+        <button onClick={() => alert('Create new content coming soon! ✨')} className="w-12 h-12 rounded-full bg-primary flex items-center justify-center relative">
           <Plus className="w-6 h-6 text-primary-foreground" />
           <span className="absolute -top-1 -right-1 text-xs">✨</span>
-        </div>
-        <div className="flex flex-col items-center gap-1">
+        </button>
+        <button onClick={() => alert('Notifications coming soon! 🔔')} className="flex flex-col items-center gap-1">
           <Bell className="w-6 h-6 text-muted-foreground" />
           <span className="text-xs">🔔</span>
-        </div>
-        <div className="flex flex-col items-center gap-1">
+        </button>
+        <button onClick={() => setCurrentView("profile")} className="flex flex-col items-center gap-1">
           <User className="w-6 h-6 text-primary" />
           <span className="text-xs">👤</span>
-        </div>
+        </button>
       </nav>
     </div>
   )
@@ -848,7 +848,7 @@ export default function StudyApp() {
   }
 
   if (currentView === "profile") {
-    return <ProfilePage onBack={() => setCurrentView("home")} />
+    return <ProfilePage onBack={() => setCurrentView("home")} setCurrentView={setCurrentView} />
   }
 
   return (
