@@ -131,7 +131,7 @@ const studyCards = [
   },
 ]
 
-function HomePage({ onStartStudying, setCurrentView }: { onStartStudying: () => void; setCurrentView: (view: "home" | "study" | "profile") => void }) {
+function HomePage({ onStartStudying, setCurrentView }: { onStartStudying: () => void; setCurrentView: (view: "home" | "study" | "profile" | "search" | "notifications") => void }) {
   const [currentProjectIndex, setCurrentProjectIndex] = useState(0)
   const [likedProjects, setLikedProjects] = useState<Set<number>>(new Set())
   const [bookmarkedProjects, setBookmarkedProjects] = useState<Set<number>>(new Set())
@@ -381,7 +381,7 @@ function HomePage({ onStartStudying, setCurrentView }: { onStartStudying: () => 
           <Home className="w-6 h-6 text-primary" />
           <span className="text-xs">🏠</span>
         </button>
-        <button onClick={() => alert('Search functionality coming soon! 🔍')} className="flex flex-col items-center gap-1">
+        <button onClick={() => setCurrentView("search")} className="flex flex-col items-center gap-1">
           <Search className="w-6 h-6 text-muted-foreground" />
           <span className="text-xs">🔍</span>
         </button>
@@ -389,7 +389,7 @@ function HomePage({ onStartStudying, setCurrentView }: { onStartStudying: () => 
           <Plus className="w-6 h-6 text-primary-foreground" />
           <span className="absolute -top-1 -right-1 text-xs">✨</span>
         </button>
-        <button onClick={() => alert('Notifications coming soon! 🔔')} className="flex flex-col items-center gap-1">
+        <button onClick={() => setCurrentView("notifications")} className="flex flex-col items-center gap-1">
           <Bell className="w-6 h-6 text-muted-foreground" />
           <span className="text-xs">🔔</span>
         </button>
@@ -620,7 +620,219 @@ function StudyCard({ card, isActive, onAnswer }: StudyCardProps) {
   )
 }
 
-function ProfilePage({ onBack, setCurrentView }: { onBack: () => void; setCurrentView: (view: "home" | "study" | "profile") => void }) {
+function SearchPage({ onBack, setCurrentView }: { onBack: () => void; setCurrentView: (view: "home" | "study" | "profile" | "search" | "notifications") => void }) {
+  const [searchQuery, setSearchQuery] = useState("")
+  const [searchResults] = useState([
+    { id: 1, title: "Calculus Derivatives", subject: "Mathematics", difficulty: "Advanced", likes: 1234 },
+    { id: 2, title: "Physics Laws of Motion", subject: "Physics", difficulty: "Medium", likes: 856 },
+    { id: 3, title: "Chemistry Periodic Table", subject: "Chemistry", difficulty: "Easy", likes: 2103 },
+    { id: 4, title: "Biology Cell Structure", subject: "Biology", difficulty: "Medium", likes: 1456 },
+  ])
+
+  return (
+    <div className="relative w-full h-screen overflow-hidden bg-background">
+      {/* Header */}
+      <header className="absolute top-0 left-0 right-0 z-50 flex items-center justify-between p-4 glass-effect">
+        <button onClick={onBack} className="flex items-center gap-2">
+          <span className="text-2xl">🎓</span>
+          <span className="text-xl font-bold">StudyTok</span>
+        </button>
+        <div className="flex items-center gap-4">
+          <div className="text-sm">
+            <span className="text-primary font-bold">2,450</span>
+            <span className="text-muted-foreground ml-1">XP ⚡</span>
+          </div>
+        </div>
+      </header>
+
+      {/* Main content */}
+      <div className="h-full overflow-y-auto pt-20 pb-20">
+        <div className="max-w-md mx-auto p-4 space-y-6">
+          {/* Search Header */}
+          <motion.div
+            initial={{ y: 20, opacity: 0 }}
+            animate={{ y: 0, opacity: 1 }}
+            className="text-center"
+          >
+            <h1 className="text-3xl font-bold mb-2">🔍 Search</h1>
+            <p className="text-muted-foreground">Find your perfect study content</p>
+          </motion.div>
+
+          {/* Search Input */}
+          <motion.div
+            initial={{ y: 20, opacity: 0 }}
+            animate={{ y: 0, opacity: 1 }}
+            transition={{ delay: 0.1 }}
+            className="relative"
+          >
+            <input
+              type="text"
+              placeholder="Search for topics, subjects, or questions..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="w-full p-4 bg-muted/50 border border-border rounded-xl focus:outline-none focus:ring-2 focus:ring-primary text-foreground text-lg"
+            />
+            <Search className="absolute right-4 top-1/2 -translate-y-1/2 w-6 h-6 text-muted-foreground" />
+          </motion.div>
+
+          {/* Search Results */}
+          <motion.div
+            initial={{ y: 20, opacity: 0 }}
+            animate={{ y: 0, opacity: 1 }}
+            transition={{ delay: 0.2 }}
+            className="space-y-4"
+          >
+            <h2 className="text-xl font-bold">📚 Popular Topics</h2>
+            {searchResults.map((result, index) => (
+              <motion.div
+                key={result.id}
+                initial={{ y: 20, opacity: 0 }}
+                animate={{ y: 0, opacity: 1 }}
+                transition={{ delay: 0.3 + index * 0.1 }}
+                className="p-4 rounded-xl glass-effect hover:bg-muted/30 transition-colors cursor-pointer"
+              >
+                <div className="flex items-center justify-between">
+                  <div>
+                    <h3 className="font-bold text-lg">{result.title}</h3>
+                    <p className="text-muted-foreground">{result.subject} • {result.difficulty}</p>
+                  </div>
+                  <div className="text-right">
+                    <div className="text-primary font-bold">{result.likes}</div>
+                    <div className="text-xs text-muted-foreground">❤️</div>
+                  </div>
+                </div>
+              </motion.div>
+            ))}
+          </motion.div>
+        </div>
+      </div>
+
+      {/* Bottom navigation */}
+      <nav className="absolute bottom-0 left-0 right-0 z-50 flex items-center justify-around p-4 glass-effect">
+        <button onClick={() => setCurrentView("home")} className="flex flex-col items-center gap-1">
+          <Home className="w-6 h-6 text-muted-foreground" />
+          <span className="text-xs">🏠</span>
+        </button>
+        <button onClick={() => setCurrentView("search")} className="flex flex-col items-center gap-1">
+          <Search className="w-6 h-6 text-primary" />
+          <span className="text-xs">🔍</span>
+        </button>
+        <button onClick={() => alert('Create new content coming soon! ✨')} className="w-12 h-12 rounded-full bg-primary flex items-center justify-center relative">
+          <Plus className="w-6 h-6 text-primary-foreground" />
+          <span className="absolute -top-1 -right-1 text-xs">✨</span>
+        </button>
+        <button onClick={() => setCurrentView("notifications")} className="flex flex-col items-center gap-1">
+          <Bell className="w-6 h-6 text-muted-foreground" />
+          <span className="text-xs">🔔</span>
+        </button>
+        <button onClick={() => setCurrentView("profile")} className="flex flex-col items-center gap-1">
+          <User className="w-6 h-6 text-muted-foreground" />
+          <span className="text-xs">👤</span>
+        </button>
+      </nav>
+    </div>
+  )
+}
+
+function NotificationsPage({ onBack, setCurrentView }: { onBack: () => void; setCurrentView: (view: "home" | "study" | "profile" | "search" | "notifications") => void }) {
+  const [notifications] = useState([
+    { id: 1, title: "🔥 Streak Alert!", message: "You're on a 15-day streak! Keep it up!", time: "2m ago", unread: true },
+    { id: 2, title: "🎉 Achievement Unlocked!", message: "Math Wizard - Score 90%+ in Mathematics", time: "1h ago", unread: true },
+    { id: 3, title: "📚 New Content Available", message: "Advanced Calculus problems added to your feed", time: "3h ago", unread: false },
+    { id: 4, title: "👥 Study Buddy Request", message: "Sarah wants to study Physics with you", time: "1d ago", unread: false },
+    { id: 5, title: "🏆 Leaderboard Update", message: "You moved up to #3 in Mathematics!", time: "2d ago", unread: false },
+  ])
+
+  return (
+    <div className="relative w-full h-screen overflow-hidden bg-background">
+      {/* Header */}
+      <header className="absolute top-0 left-0 right-0 z-50 flex items-center justify-between p-4 glass-effect">
+        <button onClick={onBack} className="flex items-center gap-2">
+          <span className="text-2xl">🎓</span>
+          <span className="text-xl font-bold">StudyTok</span>
+        </button>
+        <div className="flex items-center gap-4">
+          <div className="text-sm">
+            <span className="text-primary font-bold">2,450</span>
+            <span className="text-muted-foreground ml-1">XP ⚡</span>
+          </div>
+        </div>
+      </header>
+
+      {/* Main content */}
+      <div className="h-full overflow-y-auto pt-20 pb-20">
+        <div className="max-w-md mx-auto p-4 space-y-6">
+          {/* Notifications Header */}
+          <motion.div
+            initial={{ y: 20, opacity: 0 }}
+            animate={{ y: 0, opacity: 1 }}
+            className="text-center"
+          >
+            <h1 className="text-3xl font-bold mb-2">🔔 Notifications</h1>
+            <p className="text-muted-foreground">Stay updated with your progress</p>
+          </motion.div>
+
+          {/* Notifications List */}
+          <motion.div
+            initial={{ y: 20, opacity: 0 }}
+            animate={{ y: 0, opacity: 1 }}
+            transition={{ delay: 0.1 }}
+            className="space-y-4"
+          >
+            {notifications.map((notification, index) => (
+              <motion.div
+                key={notification.id}
+                initial={{ y: 20, opacity: 0 }}
+                animate={{ y: 0, opacity: 1 }}
+                transition={{ delay: 0.2 + index * 0.1 }}
+                className={`p-4 rounded-xl glass-effect transition-colors cursor-pointer ${
+                  notification.unread ? 'bg-primary/10 border-primary/20' : 'hover:bg-muted/30'
+                }`}
+              >
+                <div className="flex items-start gap-3">
+                  <div className={`w-3 h-3 rounded-full mt-2 ${notification.unread ? 'bg-primary' : 'bg-muted'}`} />
+                  <div className="flex-1">
+                    <div className="flex items-center justify-between">
+                      <h3 className="font-bold text-lg">{notification.title}</h3>
+                      <span className="text-xs text-muted-foreground">{notification.time}</span>
+                    </div>
+                    <p className="text-muted-foreground mt-1">{notification.message}</p>
+                  </div>
+                </div>
+              </motion.div>
+            ))}
+          </motion.div>
+        </div>
+      </div>
+
+      {/* Bottom navigation */}
+      <nav className="absolute bottom-0 left-0 right-0 z-50 flex items-center justify-around p-4 glass-effect">
+        <button onClick={() => setCurrentView("home")} className="flex flex-col items-center gap-1">
+          <Home className="w-6 h-6 text-muted-foreground" />
+          <span className="text-xs">🏠</span>
+        </button>
+        <button onClick={() => setCurrentView("search")} className="flex flex-col items-center gap-1">
+          <Search className="w-6 h-6 text-muted-foreground" />
+          <span className="text-xs">🔍</span>
+        </button>
+        <button onClick={() => alert('Create new content coming soon! ✨')} className="w-12 h-12 rounded-full bg-primary flex items-center justify-center relative">
+          <Plus className="w-6 h-6 text-primary-foreground" />
+          <span className="absolute -top-1 -right-1 text-xs">✨</span>
+        </button>
+        <button onClick={() => setCurrentView("notifications")} className="flex flex-col items-center gap-1">
+          <Bell className="w-6 h-6 text-primary" />
+          <span className="text-xs">🔔</span>
+        </button>
+        <button onClick={() => setCurrentView("profile")} className="flex flex-col items-center gap-1">
+          <User className="w-6 h-6 text-muted-foreground" />
+          <span className="text-xs">👤</span>
+        </button>
+      </nav>
+    </div>
+  )
+}
+
+function ProfilePage({ onBack, setCurrentView }: { onBack: () => void; setCurrentView: (view: "home" | "study" | "profile" | "search" | "notifications") => void }) {
   const [userStats] = useState({
     totalXP: 2450,
     streak: 15,
@@ -757,7 +969,7 @@ function ProfilePage({ onBack, setCurrentView }: { onBack: () => void; setCurren
 }
 
 export default function StudyApp() {
-  const [currentView, setCurrentView] = useState<"home" | "study" | "profile">("home")
+  const [currentView, setCurrentView] = useState<"home" | "study" | "profile" | "search" | "notifications">("home")
   const [currentIndex, setCurrentIndex] = useState(0)
   const [score, setScore] = useState(2450)
   const [streak, setStreak] = useState(15)
@@ -851,6 +1063,14 @@ export default function StudyApp() {
     return <ProfilePage onBack={() => setCurrentView("home")} setCurrentView={setCurrentView} />
   }
 
+  if (currentView === "search") {
+    return <SearchPage onBack={() => setCurrentView("home")} setCurrentView={setCurrentView} />
+  }
+
+  if (currentView === "notifications") {
+    return <NotificationsPage onBack={() => setCurrentView("home")} setCurrentView={setCurrentView} />
+  }
+
   return (
     <div className="relative w-full h-screen overflow-hidden bg-background">
       <button data-next-card onClick={goToNextCard} className="hidden" aria-hidden="true" />
@@ -931,7 +1151,7 @@ export default function StudyApp() {
           <Home className="w-6 h-6 text-muted-foreground" />
           <span className="text-xs">🏠</span>
         </button>
-        <button onClick={() => alert('Search functionality coming soon! 🔍')} className="flex flex-col items-center gap-1">
+        <button onClick={() => setCurrentView("search")} className="flex flex-col items-center gap-1">
           <Search className="w-6 h-6 text-muted-foreground" />
           <span className="text-xs">🔍</span>
         </button>
@@ -939,7 +1159,7 @@ export default function StudyApp() {
           <Plus className="w-6 h-6 text-primary-foreground" />
           <span className="absolute -top-1 -right-1 text-xs">✨</span>
         </button>
-        <button onClick={() => alert('Notifications coming soon! 🔔')} className="flex flex-col items-center gap-1">
+        <button onClick={() => setCurrentView("notifications")} className="flex flex-col items-center gap-1">
           <Bell className="w-6 h-6 text-muted-foreground" />
           <span className="text-xs">🔔</span>
         </button>

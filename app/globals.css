@@ -40,12 +40,12 @@
 }
 
 .dark {
-  --background: oklch(0.08 0 0); /* Much darker background like TikTok */
-  --foreground: oklch(0.98 0 0); /* Bright white text */
-  --card: oklch(0.12 0 0); /* Slightly lighter than background for cards */
-  --card-foreground: oklch(0.98 0 0);
-  --popover: oklch(0.12 0 0);
-  --popover-foreground: oklch(0.98 0 0);
+  --background: oklch(0.95 0 0); /* Light background for better text visibility */
+  --foreground: oklch(0.05 0 0); /* Dark black text */
+  --card: oklch(0.98 0 0); /* Very light cards */
+  --card-foreground: oklch(0.05 0 0);
+  --popover: oklch(0.98 0 0);
+  --popover-foreground: oklch(0.05 0 0);
 
   /* TikTok blue accent - bright cyan/teal */
   --primary: oklch(0.7 0.15 180); /* TikTok's signature teal/cyan blue */
@@ -55,14 +55,14 @@
   --secondary: oklch(0.75 0.2 140); /* Bright neon green like TikTok */
   --secondary-foreground: oklch(0.08 0 0);
 
-  --muted: oklch(0.18 0 0);
-  --muted-foreground: oklch(0.65 0 0);
-  --accent: oklch(0.18 0 0);
-  --accent-foreground: oklch(0.98 0 0);
+  --muted: oklch(0.9 0 0);
+  --muted-foreground: oklch(0.3 0 0);
+  --accent: oklch(0.9 0 0);
+  --accent-foreground: oklch(0.05 0 0);
   --destructive: oklch(0.6 0.2 25);
   --destructive-foreground: oklch(0.98 0 0);
-  --border: oklch(0.2 0 0);
-  --input: oklch(0.18 0 0);
+  --border: oklch(0.8 0 0);
+  --input: oklch(0.9 0 0);
   --ring: oklch(0.7 0.15 180); /* Ring uses the teal accent */
 
   /* Updated chart colors to use TikTok theme */
