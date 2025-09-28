@@ -131,8 +131,10 @@ const studyCards = [
   },
 ]
 
-function HomePage({ onStartStudying }: { onStartStudying: () => void }) {
+function HomePage({ onStartStudying, setCurrentView }: { onStartStudying: () => void; setCurrentView: (view: "home" | "study" | "profile") => void }) {
   const [currentProjectIndex, setCurrentProjectIndex] = useState(0)
+  const [likedProjects, setLikedProjects] = useState<Set<number>>(new Set())
+  const [bookmarkedProjects, setBookmarkedProjects] = useState<Set<number>>(new Set())
   const feedRef = useRef<HTMLDivElement>(null)
 
   const handleScroll = () => {
@@ -142,6 +144,50 @@ function HomePage({ onStartStudying }: { onStartStudying: () => void }) {
     const newIndex = Math.round(scrollTop / cardHeight)
     if (newIndex !== currentProjectIndex && newIndex >= 0 && newIndex < pastProjects.length) {
       setCurrentProjectIndex(newIndex)
+    }
+  }
+
+  const toggleLike = (projectId: number) => {
+    setLikedProjects((prev) => {
+      const newSet = new Set(prev)
+      if (newSet.has(projectId)) {
+        newSet.delete(projectId)
+      } else {
+        newSet.add(projectId)
+      }
+      return newSet
+    })
+  }
+
+  const toggleBookmark = (projectId: number) => {
+    setBookmarkedProjects((prev) => {
+      const newSet = new Set(prev)
+      if (newSet.has(projectId)) {
+        newSet.delete(projectId)
+      } else {
+        newSet.add(projectId)
+      }
+      return newSet
+    })
+  }
+
+  const handleShare = async (project: typeof pastProjects[0]) => {
+    const shareData = {
+      title: project.title,
+      text: project.description,
+      url: window.location.href,
+    }
+    
+    if (navigator.share) {
+      try {
+        await navigator.share(shareData)
+      } catch (err) {
+        console.log('Error sharing:', err)
+      }
+    } else {
+      // Fallback: copy to clipboard
+      await navigator.clipboard.writeText(`${project.title} - ${project.description}`)
+      alert('Content copied to clipboard! 📋')
     }
   }
 
@@ -290,10 +336,31 @@ function HomePage({ onStartStudying }: { onStartStudying: () => void }) {
 
       {/* Right side actions */}
       <div className="absolute right-4 top-1/2 -translate-y-1/2 z-40 flex flex-col gap-4">
-        <ActionButton icon={Heart} count={pastProjects[currentProjectIndex]?.likes || 0} emoji="❤️" />
-        <ActionButton icon={Trophy} count={pastProjects[currentProjectIndex]?.completedQuestions || 0} emoji="🏆" />
-        <ActionButton icon={Share} count={0} emoji="📤" />
-        <ActionButton icon={Bookmark} count={0} emoji="⭐" />
+        <ActionButton 
+          icon={Heart} 
+          count={pastProjects[currentProjectIndex]?.likes || 0} 
+          active={likedProjects.has(pastProjects[currentProjectIndex]?.id)}
+          onClick={() => toggleLike(pastProjects[currentProjectIndex]?.id)}
+          emoji="❤️" 
+        />
+        <ActionButton 
+          icon={Trophy} 
+          count={pastProjects[currentProjectIndex]?.completedQuestions || 0} 
+          emoji="🏆" 
+        />
+        <ActionButton 
+          icon={Share} 
+          count={0} 
+          onClick={() => handleShare(pastProjects[currentProjectIndex])}
+          emoji="📤" 
+        />
+        <ActionButton 
+          icon={Bookmark} 
+          count={0} 
+          active={bookmarkedProjects.has(pastProjects[currentProjectIndex]?.id)}
+          onClick={() => toggleBookmark(pastProjects[currentProjectIndex]?.id)}
+          emoji="⭐" 
+        />
       </div>
 
       {/* Progress indicator */}
@@ -314,22 +381,22 @@ function HomePage({ onStartStudying }: { onStartStudying: () => void }) {
           <Home className="w-6 h-6 text-primary" />
           <span className="text-xs">🏠</span>
         </div>
-        <div className="flex flex-col items-center gap-1">
+        <button onClick={() => alert('Search functionality coming soon! 🔍')} className="flex flex-col items-center gap-1">
           <Search className="w-6 h-6 text-muted-foreground" />
           <span className="text-xs">🔍</span>
-        </div>
-        <div className="w-12 h-12 rounded-full bg-primary flex items-center justify-center relative">
+        </button>
+        <button onClick={() => alert('Create new content coming soon! ✨')} className="w-12 h-12 rounded-full bg-primary flex items-center justify-center relative">
           <Plus className="w-6 h-6 text-primary-foreground" />
           <span className="absolute -top-1 -right-1 text-xs">✨</span>
-        </div>
-        <div className="flex flex-col items-center gap-1">
+        </button>
+        <button onClick={() => alert('Notifications coming soon! 🔔')} className="flex flex-col items-center gap-1">
           <Bell className="w-6 h-6 text-muted-foreground" />
           <span className="text-xs">🔔</span>
-        </div>
-        <div className="flex flex-col items-center gap-1">
+        </button>
+        <button onClick={() => setCurrentView("profile")} className="flex flex-col items-center gap-1">
           <User className="w-6 h-6 text-muted-foreground" />
           <span className="text-xs">👤</span>
-        </div>
+        </button>
       </nav>
     </div>
   )
@@ -553,8 +620,144 @@ function StudyCard({ card, isActive, onAnswer }: StudyCardProps) {
   )
 }
 
+function ProfilePage({ onBack }: { onBack: () => void }) {
+  const [userStats] = useState({
+    totalXP: 2450,
+    streak: 15,
+    level: 8,
+    completedProjects: 4,
+    totalQuestions: 326,
+    correctAnswers: 298,
+    accuracy: 91.4,
+    studyTime: "36h 50m",
+    favoriteSubject: "Mathematics",
+    achievements: [
+      { name: "First Steps", description: "Complete your first question", icon: "👶", unlocked: true },
+      { name: "Streak Master", description: "Maintain a 7-day streak", icon: "🔥", unlocked: true },
+      { name: "Math Wizard", description: "Score 90%+ in Mathematics", icon: "🧮", unlocked: true },
+      { name: "Speed Demon", description: "Answer 10 questions in under 2 minutes", icon: "⚡", unlocked: false },
+      { name: "Perfectionist", description: "Get 100% accuracy in any subject", icon: "💯", unlocked: false },
+    ]
+  })
+
+  return (
+    <div className="relative w-full h-screen overflow-hidden bg-background">
+      {/* Header */}
+      <header className="absolute top-0 left-0 right-0 z-50 flex items-center justify-between p-4 glass-effect">
+        <button onClick={onBack} className="flex items-center gap-2">
+          <span className="text-2xl">🎓</span>
+          <span className="text-xl font-bold">StudyTok</span>
+        </button>
+        <div className="flex items-center gap-4">
+          <div className="text-sm">
+            <span className="text-primary font-bold">{userStats.totalXP}</span>
+            <span className="text-muted-foreground ml-1">XP ⚡</span>
+          </div>
+          <div className="flex items-center gap-1 px-2 py-1 rounded-full bg-secondary/20 text-secondary text-sm">
+            <span>🔥</span>
+            <span>{userStats.streak}</span>
+          </div>
+        </div>
+      </header>
+
+      {/* Main content */}
+      <div className="h-full overflow-y-auto pt-20 pb-20">
+        <div className="max-w-md mx-auto p-4 space-y-6">
+          {/* Profile Header */}
+          <motion.div
+            initial={{ y: 20, opacity: 0 }}
+            animate={{ y: 0, opacity: 1 }}
+            className="text-center"
+          >
+            <div className="w-24 h-24 rounded-full bg-gradient-to-br from-primary to-secondary mx-auto mb-4 flex items-center justify-center text-4xl">
+              👨‍🎓
+            </div>
+            <h1 className="text-2xl font-bold mb-2">Study Master</h1>
+            <p className="text-muted-foreground">Level {userStats.level} • {userStats.favoriteSubject} Enthusiast</p>
+          </motion.div>
+
+          {/* Stats Grid */}
+          <motion.div
+            initial={{ y: 20, opacity: 0 }}
+            animate={{ y: 0, opacity: 1 }}
+            transition={{ delay: 0.1 }}
+            className="grid grid-cols-2 gap-4"
+          >
+            <div className="p-4 rounded-xl glass-effect text-center">
+              <div className="text-2xl font-bold text-primary">{userStats.completedProjects}</div>
+              <div className="text-sm text-muted-foreground">Projects</div>
+            </div>
+            <div className="p-4 rounded-xl glass-effect text-center">
+              <div className="text-2xl font-bold text-secondary">{userStats.totalQuestions}</div>
+              <div className="text-sm text-muted-foreground">Questions</div>
+            </div>
+            <div className="p-4 rounded-xl glass-effect text-center">
+              <div className="text-2xl font-bold text-primary">{userStats.accuracy}%</div>
+              <div className="text-sm text-muted-foreground">Accuracy</div>
+            </div>
+            <div className="p-4 rounded-xl glass-effect text-center">
+              <div className="text-2xl font-bold text-secondary">{userStats.studyTime}</div>
+              <div className="text-sm text-muted-foreground">Study Time</div>
+            </div>
+          </motion.div>
+
+          {/* Achievements */}
+          <motion.div
+            initial={{ y: 20, opacity: 0 }}
+            animate={{ y: 0, opacity: 1 }}
+            transition={{ delay: 0.2 }}
+          >
+            <h2 className="text-lg font-bold mb-4">🏆 Achievements</h2>
+            <div className="space-y-3">
+              {userStats.achievements.map((achievement, index) => (
+                <div
+                  key={index}
+                  className={`p-3 rounded-lg flex items-center gap-3 ${
+                    achievement.unlocked ? 'glass-effect' : 'bg-muted/20 opacity-60'
+                  }`}
+                >
+                  <span className="text-2xl">{achievement.icon}</span>
+                  <div className="flex-1">
+                    <div className="font-medium">{achievement.name}</div>
+                    <div className="text-sm text-muted-foreground">{achievement.description}</div>
+                  </div>
+                  {achievement.unlocked && <span className="text-primary">✓</span>}
+                </div>
+              ))}
+            </div>
+          </motion.div>
+        </div>
+      </div>
+
+      {/* Bottom navigation */}
+      <nav className="absolute bottom-0 left-0 right-0 z-50 flex items-center justify-around p-4 glass-effect">
+        <div className="flex flex-col items-center gap-1">
+          <Home className="w-6 h-6 text-muted-foreground" />
+          <span className="text-xs">🏠</span>
+        </div>
+        <div className="flex flex-col items-center gap-1">
+          <Search className="w-6 h-6 text-muted-foreground" />
+          <span className="text-xs">🔍</span>
+        </div>
+        <div className="w-12 h-12 rounded-full bg-primary flex items-center justify-center relative">
+          <Plus className="w-6 h-6 text-primary-foreground" />
+          <span className="absolute -top-1 -right-1 text-xs">✨</span>
+        </div>
+        <div className="flex flex-col items-center gap-1">
+          <Bell className="w-6 h-6 text-muted-foreground" />
+          <span className="text-xs">🔔</span>
+        </div>
+        <div className="flex flex-col items-center gap-1">
+          <User className="w-6 h-6 text-primary" />
+          <span className="text-xs">👤</span>
+        </div>
+      </nav>
+    </div>
+  )
+}
+
 export default function StudyApp() {
-  const [currentView, setCurrentView] = useState<"home" | "study">("home")
+  const [currentView, setCurrentView] = useState<"home" | "study" | "profile">("home")
   const [currentIndex, setCurrentIndex] = useState(0)
   const [score, setScore] = useState(2450)
   const [streak, setStreak] = useState(15)
@@ -641,7 +844,11 @@ export default function StudyApp() {
   }, [currentIndex])
 
   if (currentView === "home") {
-    return <HomePage onStartStudying={() => setCurrentView("study")} />
+    return <HomePage onStartStudying={() => setCurrentView("study")} setCurrentView={setCurrentView} />
+  }
+
+  if (currentView === "profile") {
+    return <ProfilePage onBack={() => setCurrentView("home")} />
   }
 
   return (
@@ -724,22 +931,22 @@ export default function StudyApp() {
           <Home className="w-6 h-6 text-muted-foreground" />
           <span className="text-xs">🏠</span>
         </button>
-        <div className="flex flex-col items-center gap-1">
+        <button onClick={() => alert('Search functionality coming soon! 🔍')} className="flex flex-col items-center gap-1">
           <Search className="w-6 h-6 text-muted-foreground" />
           <span className="text-xs">🔍</span>
-        </div>
-        <div className="w-12 h-12 rounded-full bg-primary flex items-center justify-center relative">
+        </button>
+        <button onClick={() => alert('Create new content coming soon! ✨')} className="w-12 h-12 rounded-full bg-primary flex items-center justify-center relative">
           <Plus className="w-6 h-6 text-primary-foreground" />
           <span className="absolute -top-1 -right-1 text-xs">✨</span>
-        </div>
-        <div className="flex flex-col items-center gap-1">
+        </button>
+        <button onClick={() => alert('Notifications coming soon! 🔔')} className="flex flex-col items-center gap-1">
           <Bell className="w-6 h-6 text-muted-foreground" />
           <span className="text-xs">🔔</span>
-        </div>
-        <div className="flex flex-col items-center gap-1">
+        </button>
+        <button onClick={() => setCurrentView("profile")} className="flex flex-col items-center gap-1">
           <User className="w-6 h-6 text-muted-foreground" />
           <span className="text-xs">👤</span>
-        </div>
+        </button>
       </nav>
 
       {/* Progress bar */}

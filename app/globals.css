@@ -80,6 +80,11 @@
   --sidebar-accent-foreground: oklch(0.98 0 0);
   --sidebar-border: oklch(0.2 0 0);
   --sidebar-ring: oklch(0.7 0.15 180);
+  
+  /* Custom glass and glow effects */
+  --glass: oklch(0.12 0 0 / 0.8);
+  --neon-glow: 0 0 20px oklch(0.7 0.15 180 / 0.5);
+  --green-glow: 0 0 20px oklch(0.75 0.2 140 / 0.5);
 }
 
 @theme inline {
