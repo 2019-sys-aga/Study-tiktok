@@ -44,45 +44,80 @@ export function StudyTokLogo({ size = "md", animated = true, className = "" }: L
       <motion.div
         className={`${noteSizeClasses[size]} relative z-10`}
         initial={animated ? { x: -20, opacity: 0 } : {}}
-        animate={animated ? { x: 0, opacity: 1 } : {}}
-        transition={{ delay: 0.3, duration: 0.6 }}
+        animate={animated ? { 
+          x: 0, 
+          opacity: 1,
+          y: [0, -2, 0],
+        } : {}}
+        transition={{ 
+          delay: 0.3, 
+          duration: 0.6,
+          y: {
+            duration: 2,
+            repeat: Infinity,
+            ease: "easeInOut"
+          }
+        }}
       >
         <svg
           viewBox="0 0 24 24"
           fill="none"
-          className="w-full h-full"
+          className="w-full h-full drop-shadow-lg"
+          style={{ filter: 'drop-shadow(0 0 8px rgba(255,255,255,0.3))' }}
         >
           {/* Note stem */}
           <motion.path
-            d="M8 2v16"
+            d="M10 2v14"
             stroke="white"
-            strokeWidth="2"
+            strokeWidth="2.5"
             strokeLinecap="round"
             initial={animated ? { pathLength: 0 } : {}}
             animate={animated ? { pathLength: 1 } : {}}
             transition={{ delay: 0.5, duration: 0.8 }}
           />
-          {/* Note head */}
+          {/* Note head (oval) */}
           <motion.ellipse
-            cx="8"
-            cy="18"
-            rx="3"
-            ry="2"
+            cx="10"
+            cy="16"
+            rx="3.5"
+            ry="2.5"
             fill="white"
             initial={animated ? { scale: 0 } : {}}
             animate={animated ? { scale: 1 } : {}}
             transition={{ delay: 0.7, duration: 0.4 }}
           />
-          {/* Note flag */}
+          {/* Note flag (curved) */}
           <motion.path
-            d="M8 2c4 0 6 2 6 4s-2 4-6 4"
+            d="M10 2c5 0 7 3 7 6s-2 6-7 6"
             stroke="white"
             strokeWidth="2"
             fill="none"
             strokeLinecap="round"
             initial={animated ? { pathLength: 0 } : {}}
+            animate={animated ? { 
+              pathLength: 1,
+              rotate: [0, 2, 0]
+            } : {}}
+            transition={{ 
+              delay: 0.9, 
+              duration: 0.6,
+              rotate: {
+                duration: 3,
+                repeat: Infinity,
+                ease: "easeInOut"
+              }
+            }}
+          />
+          {/* Flag detail line */}
+          <motion.path
+            d="M10 2c3 0 5 2 5 4s-2 4-5 4"
+            stroke="white"
+            strokeWidth="1.5"
+            fill="none"
+            strokeLinecap="round"
+            initial={animated ? { pathLength: 0 } : {}}
             animate={animated ? { pathLength: 1 } : {}}
-            transition={{ delay: 0.9, duration: 0.6 }}
+            transition={{ delay: 1.1, duration: 0.4 }}
           />
         </svg>
       </motion.div>
