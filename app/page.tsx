@@ -5,6 +5,7 @@ import { motion, AnimatePresence } from "framer-motion"
 import { Heart, Bot, Share, Bookmark, Home, Search, Plus, Bell, User, Play, Trophy, BookOpen } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Progress } from "@/components/ui/progress"
+import { StudyTokLogo, LoadingScreen } from "@/components/logo"
 
 const pastProjects = [
   {
@@ -203,8 +204,8 @@ function HomePage({ onStartStudying, setCurrentView }: { onStartStudying: () => 
     <div className="relative w-full h-screen overflow-hidden bg-background">
       {/* Header */}
       <header className="absolute top-0 left-0 right-0 z-50 flex items-center justify-between p-4 glass-effect">
-        <div className="flex items-center gap-2">
-          <span className="text-2xl">🎓</span>
+        <div className="flex items-center gap-3">
+          <StudyTokLogo size="md" animated={false} />
           <span className="text-xl font-bold">StudyTok</span>
         </div>
         <div className="flex items-center gap-4">
@@ -633,8 +634,8 @@ function SearchPage({ onBack, setCurrentView }: { onBack: () => void; setCurrent
     <div className="relative w-full h-screen overflow-hidden bg-background">
       {/* Header */}
       <header className="absolute top-0 left-0 right-0 z-50 flex items-center justify-between p-4 glass-effect">
-        <button onClick={onBack} className="flex items-center gap-2">
-          <span className="text-2xl">🎓</span>
+        <button onClick={onBack} className="flex items-center gap-3">
+          <StudyTokLogo size="md" animated={false} />
           <span className="text-xl font-bold">StudyTok</span>
         </button>
         <div className="flex items-center gap-4">
@@ -747,8 +748,8 @@ function NotificationsPage({ onBack, setCurrentView }: { onBack: () => void; set
     <div className="relative w-full h-screen overflow-hidden bg-background">
       {/* Header */}
       <header className="absolute top-0 left-0 right-0 z-50 flex items-center justify-between p-4 glass-effect">
-        <button onClick={onBack} className="flex items-center gap-2">
-          <span className="text-2xl">🎓</span>
+        <button onClick={onBack} className="flex items-center gap-3">
+          <StudyTokLogo size="md" animated={false} />
           <span className="text-xl font-bold">StudyTok</span>
         </button>
         <div className="flex items-center gap-4">
@@ -856,8 +857,8 @@ function ProfilePage({ onBack, setCurrentView }: { onBack: () => void; setCurren
     <div className="relative w-full h-screen overflow-hidden bg-background">
       {/* Header */}
       <header className="absolute top-0 left-0 right-0 z-50 flex items-center justify-between p-4 glass-effect">
-        <button onClick={onBack} className="flex items-center gap-2">
-          <span className="text-2xl">🎓</span>
+        <button onClick={onBack} className="flex items-center gap-3">
+          <StudyTokLogo size="md" animated={false} />
           <span className="text-xl font-bold">StudyTok</span>
         </button>
         <div className="flex items-center gap-4">
@@ -970,6 +971,7 @@ function ProfilePage({ onBack, setCurrentView }: { onBack: () => void; setCurren
 
 export default function StudyApp() {
   const [currentView, setCurrentView] = useState<"home" | "study" | "profile" | "search" | "notifications">("home")
+  const [isLoading, setIsLoading] = useState(true)
   const [currentIndex, setCurrentIndex] = useState(0)
   const [score, setScore] = useState(2450)
   const [streak, setStreak] = useState(15)
@@ -1055,6 +1057,19 @@ export default function StudyApp() {
     }
   }, [currentIndex])
 
+  // Loading effect
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setIsLoading(false)
+    }, 3000) // Show loading for 3 seconds
+
+    return () => clearTimeout(timer)
+  }, [])
+
+  if (isLoading) {
+    return <LoadingScreen />
+  }
+
   if (currentView === "home") {
     return <HomePage onStartStudying={() => setCurrentView("study")} setCurrentView={setCurrentView} />
   }
@@ -1077,12 +1092,10 @@ export default function StudyApp() {
 
       {/* Header */}
       <header className="absolute top-0 left-0 right-0 z-50 flex items-center justify-between p-4 glass-effect">
-        <div className="flex items-center gap-2">
-          <button onClick={() => setCurrentView("home")} className="flex items-center gap-2">
-            <span className="text-2xl">🎓</span>
-            <span className="text-xl font-bold">StudyTok</span>
-          </button>
-        </div>
+        <button onClick={() => setCurrentView("home")} className="flex items-center gap-3">
+          <StudyTokLogo size="md" animated={false} />
+          <span className="text-xl font-bold">StudyTok</span>
+        </button>
         <div className="flex items-center gap-4">
           <div className="text-sm">
             <span className="text-primary font-bold">{score}</span>
