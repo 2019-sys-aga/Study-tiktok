@@ -132,7 +132,11 @@ const studyCards = [
   },
 ]
 
-function HomePage({ onStartStudying, setCurrentView }: { onStartStudying: () => void; setCurrentView: (view: "home" | "study" | "profile" | "search" | "notifications") => void }) {
+function HomePage({ onStartStudying, setCurrentView, selectedSubject }: { 
+  onStartStudying: () => void; 
+  setCurrentView: (view: "home" | "study" | "profile" | "search" | "notifications") => void;
+  selectedSubject?: string;
+}) {
   const [currentProjectIndex, setCurrentProjectIndex] = useState(0)
   const [likedProjects, setLikedProjects] = useState<Set<number>>(new Set())
   const [bookmarkedProjects, setBookmarkedProjects] = useState<Set<number>>(new Set())
@@ -199,6 +203,24 @@ function HomePage({ onStartStudying, setCurrentView }: { onStartStudying: () => 
       return () => feedElement.removeEventListener("scroll", handleScroll)
     }
   }, [currentProjectIndex])
+
+  // Scroll to selected subject when coming from search
+  useEffect(() => {
+    if (selectedSubject && feedRef.current) {
+      const subjectIndex = pastProjects.findIndex(project => project.subject === selectedSubject)
+      if (subjectIndex !== -1) {
+        setCurrentProjectIndex(subjectIndex)
+        setTimeout(() => {
+          if (feedRef.current) {
+            feedRef.current.scrollTo({
+              top: subjectIndex * window.innerHeight,
+              behavior: "smooth",
+            })
+          }
+        }, 100)
+      }
+    }
+  }, [selectedSubject])
 
   return (
     <div className="relative w-full h-screen overflow-hidden bg-background">
@@ -679,7 +701,11 @@ function StudyCard({ card, isActive, onAnswer }: StudyCardProps) {
   )
 }
 
-function SearchPage({ onBack, setCurrentView }: { onBack: () => void; setCurrentView: (view: "home" | "study" | "profile" | "search" | "notifications") => void }) {
+function SearchPage({ onBack, setCurrentView, onSelectSubject }: { 
+  onBack: () => void; 
+  setCurrentView: (view: "home" | "study" | "profile" | "search" | "notifications") => void;
+  onSelectSubject: (subject: string) => void;
+}) {
   const [searchQuery, setSearchQuery] = useState("")
   const [searchResults] = useState([
     { id: 1, title: "Calculus Derivatives", subject: "Mathematics", difficulty: "Advanced", likes: 1234 },
@@ -749,6 +775,12 @@ function SearchPage({ onBack, setCurrentView }: { onBack: () => void; setCurrent
                 animate={{ y: 0, opacity: 1 }}
                 transition={{ delay: 0.3 + index * 0.1 }}
                 className="p-4 rounded-xl glass-effect hover:bg-muted/30 transition-colors cursor-pointer"
+                onClick={() => {
+                  onSelectSubject(result.subject)
+                  setCurrentView("home")
+                }}
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
               >
                 <div className="flex items-center justify-between">
                   <div>
@@ -1030,6 +1062,7 @@ function ProfilePage({ onBack, setCurrentView }: { onBack: () => void; setCurren
 export default function StudyApp() {
   const [currentView, setCurrentView] = useState<"home" | "study" | "profile" | "search" | "notifications">("home")
   const [isLoading, setIsLoading] = useState(true)
+  const [selectedSubject, setSelectedSubject] = useState<string | undefined>(undefined)
   const [currentIndex, setCurrentIndex] = useState(0)
   const [score, setScore] = useState(2450)
   const [streak, setStreak] = useState(15)
@@ -1129,7 +1162,7 @@ export default function StudyApp() {
   }
 
   if (currentView === "home") {
-    return <HomePage onStartStudying={() => setCurrentView("study")} setCurrentView={setCurrentView} />
+    return <HomePage onStartStudying={() => setCurrentView("study")} setCurrentView={setCurrentView} selectedSubject={selectedSubject} />
   }
 
   if (currentView === "profile") {
@@ -1137,7 +1170,7 @@ export default function StudyApp() {
   }
 
   if (currentView === "search") {
-    return <SearchPage onBack={() => setCurrentView("home")} setCurrentView={setCurrentView} />
+    return <SearchPage onBack={() => setCurrentView("home")} setCurrentView={setCurrentView} onSelectSubject={setSelectedSubject} />
   }
 
   if (currentView === "notifications") {
