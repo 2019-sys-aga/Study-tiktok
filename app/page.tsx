@@ -589,9 +589,10 @@ function StudyCard({ card, isActive, onAnswer }: StudyCardProps) {
 
       {showResult && isCorrect && (
         <div className="absolute inset-0 pointer-events-none overflow-hidden">
-          {[...Array(20)].map((_, i) => (
+          {/* Main confetti burst */}
+          {[...Array(50)].map((_, i) => (
             <motion.div
-              key={i}
+              key={`main-${i}`}
               initial={{
                 y: -50,
                 x: Math.random() * window.innerWidth,
@@ -602,17 +603,74 @@ function StudyCard({ card, isActive, onAnswer }: StudyCardProps) {
               animate={{
                 y: window.innerHeight + 100,
                 rotate: 360 * (Math.random() > 0.5 ? 1 : -1),
-                scale: [1, 1.2, 0.8, 1],
+                scale: [1, 1.3, 0.7, 1],
                 opacity: [1, 1, 1, 0],
               }}
               transition={{
-                duration: 2.5,
-                delay: Math.random() * 0.5,
-                ease: "easeOut",
+                duration: 3,
+                delay: Math.random() * 0.8,
+                ease: [0.4, 0, 0.6, 1],
               }}
               className="absolute text-2xl"
             >
-              {["🎉", "✨", "🔥", "💯", "⭐", "🎊", "💫", "🌟"][Math.floor(Math.random() * 8)]}
+              {["🎉", "✨", "🔥", "💯", "⭐", "🎊", "💫", "🌟", "🎈", "🎁", "🏆", "💎"][Math.floor(Math.random() * 12)]}
+            </motion.div>
+          ))}
+          
+          {/* Secondary sparkle burst */}
+          {[...Array(30)].map((_, i) => (
+            <motion.div
+              key={`sparkle-${i}`}
+              initial={{
+                y: window.innerHeight / 2 + Math.random() * 200 - 100,
+                x: Math.random() * window.innerWidth,
+                opacity: 0,
+                scale: 0,
+                rotate: 0,
+              }}
+              animate={{
+                y: window.innerHeight / 2 + (Math.random() - 0.5) * 400,
+                x: Math.random() * window.innerWidth,
+                rotate: 720 * (Math.random() > 0.5 ? 1 : -1),
+                scale: [0, 1.5, 0],
+                opacity: [0, 1, 0],
+              }}
+              transition={{
+                duration: 2,
+                delay: 0.5 + Math.random() * 1,
+                ease: [0.4, 0, 0.6, 1],
+              }}
+              className="absolute text-xl"
+            >
+              {["✨", "💫", "⭐", "🌟", "💎"][Math.floor(Math.random() * 5)]}
+            </motion.div>
+          ))}
+          
+          {/* Floating celebration */}
+          {[...Array(20)].map((_, i) => (
+            <motion.div
+              key={`float-${i}`}
+              initial={{
+                y: window.innerHeight + 50,
+                x: Math.random() * window.innerWidth,
+                opacity: 1,
+                scale: 1,
+                rotate: 0,
+              }}
+              animate={{
+                y: -100,
+                rotate: 180 * (Math.random() > 0.5 ? 1 : -1),
+                scale: [1, 1.2, 0.8],
+                opacity: [1, 1, 0],
+              }}
+              transition={{
+                duration: 4,
+                delay: 1 + Math.random() * 2,
+                ease: [0.4, 0, 0.6, 1],
+              }}
+              className="absolute text-3xl"
+            >
+              {["🎉", "🎊", "🏆", "💯"][Math.floor(Math.random() * 4)]}
             </motion.div>
           ))}
         </div>

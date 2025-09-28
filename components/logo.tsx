@@ -47,15 +47,16 @@ export function StudyTokLogo({ size = "md", animated = true, className = "" }: L
         animate={animated ? { 
           x: 0, 
           opacity: 1,
-          y: [0, -2, 0],
+          y: [0, -1.5, 0],
         } : {}}
         transition={{ 
           delay: 0.3, 
-          duration: 0.6,
+          duration: 0.8,
+          ease: "easeOut",
           y: {
-            duration: 2,
+            duration: 2.5,
             repeat: Infinity,
-            ease: "easeInOut"
+            ease: [0.4, 0, 0.6, 1]
           }
         }}
       >
@@ -96,15 +97,16 @@ export function StudyTokLogo({ size = "md", animated = true, className = "" }: L
             initial={animated ? { pathLength: 0 } : {}}
             animate={animated ? { 
               pathLength: 1,
-              rotate: [0, 2, 0]
+              rotate: [0, 1.5, 0]
             } : {}}
             transition={{ 
               delay: 0.9, 
-              duration: 0.6,
+              duration: 0.8,
+              ease: "easeOut",
               rotate: {
-                duration: 3,
+                duration: 3.5,
                 repeat: Infinity,
-                ease: "easeInOut"
+                ease: [0.4, 0, 0.6, 1]
               }
             }}
           />
@@ -135,15 +137,15 @@ export function StudyTokLogo({ size = "md", animated = true, className = "" }: L
       {/* Pulse Effect */}
       {animated && (
         <motion.div
-          className="absolute inset-0 rounded-full border-2 border-white/30"
+          className="absolute inset-0 rounded-full border-2 border-white/20"
           animate={{
-            scale: [1, 1.2, 1],
-            opacity: [0.3, 0, 0.3],
+            scale: [1, 1.15, 1],
+            opacity: [0.2, 0, 0.2],
           }}
           transition={{
-            duration: 2,
+            duration: 2.8,
             repeat: Infinity,
-            ease: "easeInOut",
+            ease: [0.4, 0, 0.6, 1],
           }}
         />
       )}
@@ -157,9 +159,9 @@ export function LoadingScreen() {
       <div className="text-center">
         {/* Main Logo */}
         <motion.div
-          initial={{ scale: 0 }}
-          animate={{ scale: 1 }}
-          transition={{ duration: 0.8, ease: "easeOut" }}
+          initial={{ scale: 0, rotate: -180 }}
+          animate={{ scale: 1, rotate: 0 }}
+          transition={{ duration: 1.2, ease: [0.4, 0, 0.6, 1] }}
           className="mb-8"
         >
           <StudyTokLogo size="xl" animated={true} />
@@ -197,14 +199,14 @@ export function LoadingScreen() {
               key={i}
               className="w-3 h-3 bg-gradient-to-r from-teal-400 to-pink-500 rounded-full"
               animate={{
-                scale: [1, 1.2, 1],
-                opacity: [0.5, 1, 0.5],
+                scale: [1, 1.3, 1],
+                opacity: [0.4, 1, 0.4],
               }}
               transition={{
-                duration: 1.5,
+                duration: 2,
                 repeat: Infinity,
-                delay: i * 0.2,
-                ease: "easeInOut",
+                delay: i * 0.3,
+                ease: [0.4, 0, 0.6, 1],
               }}
             />
           ))}
