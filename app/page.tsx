@@ -145,7 +145,7 @@ function HomePage({ onStartStudying, setCurrentView, selectedSubject, customThum
   const feedRef = useRef<HTMLDivElement>(null)
 
   const handleScroll = () => {
-    if (!feedRef.current) return
+    if (!feedRef.current || typeof window === 'undefined') return
     const scrollTop = feedRef.current.scrollTop
     const cardHeight = window.innerHeight
     const newIndex = Math.round(scrollTop / cardHeight)
@@ -213,7 +213,7 @@ function HomePage({ onStartStudying, setCurrentView, selectedSubject, customThum
       if (subjectIndex !== -1) {
         setCurrentProjectIndex(subjectIndex)
         setTimeout(() => {
-          if (feedRef.current) {
+          if (feedRef.current && typeof window !== 'undefined') {
             feedRef.current.scrollTo({
               top: subjectIndex * window.innerHeight,
               behavior: "smooth",
@@ -445,7 +445,12 @@ function StudyCard({ card, isActive, onAnswer }: StudyCardProps) {
   const [selectedAnswer, setSelectedAnswer] = useState<number | string | null>(null)
   const [showResult, setShowResult] = useState(false)
   const [isCorrect, setIsCorrect] = useState(false)
+  const [isClient, setIsClient] = useState(false)
   const [userAnswer, setUserAnswer] = useState("")
+
+  useEffect(() => {
+    setIsClient(true)
+  }, [])
 
   const handleSubmit = () => {
     if (card.type === "mcq" && selectedAnswer !== null) {
@@ -619,7 +624,7 @@ function StudyCard({ card, isActive, onAnswer }: StudyCardProps) {
         </AnimatePresence>
       </div>
 
-      {showResult && isCorrect && (
+      {showResult && isCorrect && isClient && (
         <div className="absolute inset-0 pointer-events-none overflow-hidden">
           {/* Main confetti burst */}
           {[...Array(50)].map((_, i) => (
@@ -627,13 +632,13 @@ function StudyCard({ card, isActive, onAnswer }: StudyCardProps) {
               key={`main-${i}`}
               initial={{
                 y: -50,
-                x: Math.random() * window.innerWidth,
+                x: Math.random() * (typeof window !== 'undefined' ? window.innerWidth : 400),
                 opacity: 1,
                 scale: 1,
                 rotate: 0,
               }}
               animate={{
-                y: window.innerHeight + 100,
+                y: (typeof window !== 'undefined' ? window.innerHeight : 800) + 100,
                 rotate: 360 * (Math.random() > 0.5 ? 1 : -1),
                 scale: [1, 1.3, 0.7, 1],
                 opacity: [1, 1, 1, 0],
@@ -654,15 +659,15 @@ function StudyCard({ card, isActive, onAnswer }: StudyCardProps) {
             <motion.div
               key={`sparkle-${i}`}
               initial={{
-                y: window.innerHeight / 2 + Math.random() * 200 - 100,
-                x: Math.random() * window.innerWidth,
+                y: (typeof window !== 'undefined' ? window.innerHeight : 800) / 2 + Math.random() * 200 - 100,
+                x: Math.random() * (typeof window !== 'undefined' ? window.innerWidth : 400),
                 opacity: 0,
                 scale: 0,
                 rotate: 0,
               }}
               animate={{
-                y: window.innerHeight / 2 + (Math.random() - 0.5) * 400,
-                x: Math.random() * window.innerWidth,
+                y: (typeof window !== 'undefined' ? window.innerHeight : 800) / 2 + (Math.random() - 0.5) * 400,
+                x: Math.random() * (typeof window !== 'undefined' ? window.innerWidth : 400),
                 rotate: 720 * (Math.random() > 0.5 ? 1 : -1),
                 scale: [0, 1.5, 0],
                 opacity: [0, 1, 0],
@@ -683,8 +688,8 @@ function StudyCard({ card, isActive, onAnswer }: StudyCardProps) {
             <motion.div
               key={`float-${i}`}
               initial={{
-                y: window.innerHeight + 50,
-                x: Math.random() * window.innerWidth,
+                y: (typeof window !== 'undefined' ? window.innerHeight : 800) + 50,
+                x: Math.random() * (typeof window !== 'undefined' ? window.innerWidth : 400),
                 opacity: 1,
                 scale: 1,
                 rotate: 0,
@@ -1098,7 +1103,7 @@ export default function StudyApp() {
       setCurrentIndex(nextIndex)
       if (feedRef.current) {
         feedRef.current.scrollTo({
-          top: nextIndex * window.innerHeight,
+          top: nextIndex * (typeof window !== 'undefined' ? window.innerHeight : 800),
           behavior: "smooth",
         })
       }
@@ -1106,7 +1111,7 @@ export default function StudyApp() {
   }
 
   const handleScroll = () => {
-    if (!feedRef.current) return
+    if (!feedRef.current || typeof window === 'undefined') return
     const scrollTop = feedRef.current.scrollTop
     const cardHeight = window.innerHeight
     const newIndex = Math.round(scrollTop / cardHeight)

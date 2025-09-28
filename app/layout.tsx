@@ -5,9 +5,9 @@ import { Analytics } from '@vercel/analytics/next'
 import './globals.css'
 
 export const metadata: Metadata = {
-  title: 'v0 App',
-  description: 'Created with v0',
-  generator: 'v0.app',
+  title: '🎓 StudyTok - Learn Like TikTok',
+  description: 'The ultimate study app that makes learning addictive! Master subjects with TikTok-style short-form content.',
+  generator: 'StudyTok',
 }
 
 export default function RootLayout({
@@ -17,7 +17,10 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <body className={`font-sans ${GeistSans.variable} ${GeistMono.variable}`}>
+      <body 
+        className={`font-sans ${GeistSans.variable} ${GeistMono.variable}`}
+        suppressHydrationWarning={true}
+      >
         {children}
         <Analytics />
       </body>
