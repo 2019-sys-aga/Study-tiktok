@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button"
 import { Progress } from "@/components/ui/progress"
 import { StudyTokLogo, LoadingScreen } from "@/components/logo"
 import SupabaseTest from "@/components/supabase-test"
+import ImportComponent from "@/components/import-component"
 
 const pastProjects = [
   {
@@ -133,26 +134,88 @@ const studyCards = [
   },
 ]
 
-function HomePage({ onStartStudying, setCurrentView, selectedSubject, customThumbnail, onUploadThumbnail }: { 
+function HomePage({ onStartStudying, setCurrentView, selectedSubject, customThumbnail, onUploadThumbnail, importedDecks, onImportClick }: { 
   onStartStudying: () => void; 
   setCurrentView: (view: "home" | "study" | "profile" | "search" | "notifications") => void;
   selectedSubject?: string;
   customThumbnail?: string | null;
   onUploadThumbnail: () => void;
+  importedDecks: any[];
+  onImportClick: () => void;
 }) {
   const [currentProjectIndex, setCurrentProjectIndex] = useState(0)
   const [likedProjects, setLikedProjects] = useState<Set<number>>(new Set())
   const [bookmarkedProjects, setBookmarkedProjects] = useState<Set<number>>(new Set())
   const feedRef = useRef<HTMLDivElement>(null)
 
+  // Combine original projects with imported decks
+  const allProjects = [...importedDecks, ...pastProjects]
+
   const handleScroll = () => {
     if (!feedRef.current || typeof window === 'undefined') return
     const scrollTop = feedRef.current.scrollTop
     const cardHeight = window.innerHeight
     const newIndex = Math.round(scrollTop / cardHeight)
-    if (newIndex !== currentProjectIndex && newIndex >= 0 && newIndex < pastProjects.length) {
+    if (newIndex !== currentProjectIndex && newIndex >= 0 && newIndex < allProjects.length) {
       setCurrentProjectIndex(newIndex)
     }
+  }
+
+  // Enhanced scroll with momentum and touch support
+  const handleWheel = (e: React.WheelEvent) => {
+    e.preventDefault()
+    if (feedRef.current) {
+      const delta = e.deltaY
+      const currentScroll = feedRef.current.scrollTop
+      const cardHeight = window.innerHeight
+      
+      if (Math.abs(delta) > 50) { // Threshold for scroll
+        const direction = delta > 0 ? 1 : -1
+        const targetIndex = Math.max(0, Math.min(allProjects.length - 1, currentProjectIndex + direction))
+        const targetScroll = targetIndex * cardHeight
+        
+        feedRef.current.scrollTo({
+          top: targetScroll,
+          behavior: 'smooth'
+        })
+      }
+    }
+  }
+
+  // Touch gesture handling
+  const handleTouchStart = (e: React.TouchEvent) => {
+    const touch = e.touches[0]
+    const startY = touch.clientY
+    const startScroll = feedRef.current?.scrollTop || 0
+    
+    const handleTouchMove = (e: TouchEvent) => {
+      e.preventDefault()
+      const touch = e.touches[0]
+      const deltaY = touch.clientY - startY
+      const cardHeight = window.innerHeight
+      
+      if (Math.abs(deltaY) > cardHeight * 0.3) { // 30% threshold
+        const direction = deltaY > 0 ? -1 : 1
+        const targetIndex = Math.max(0, Math.min(allProjects.length - 1, currentProjectIndex + direction))
+        const targetScroll = targetIndex * cardHeight
+        
+        feedRef.current?.scrollTo({
+          top: targetScroll,
+          behavior: 'smooth'
+        })
+        
+        document.removeEventListener('touchmove', handleTouchMove)
+        document.removeEventListener('touchend', handleTouchEnd)
+      }
+    }
+    
+    const handleTouchEnd = () => {
+      document.removeEventListener('touchmove', handleTouchMove)
+      document.removeEventListener('touchend', handleTouchEnd)
+    }
+    
+    document.addEventListener('touchmove', handleTouchMove, { passive: false })
+    document.addEventListener('touchend', handleTouchEnd)
   }
 
   const toggleLike = (projectId: number) => {
@@ -210,7 +273,7 @@ function HomePage({ onStartStudying, setCurrentView, selectedSubject, customThum
   // Scroll to selected subject when coming from search
   useEffect(() => {
     if (selectedSubject && feedRef.current) {
-      const subjectIndex = pastProjects.findIndex(project => project.subject === selectedSubject)
+      const subjectIndex = allProjects.findIndex(project => project.subject === selectedSubject)
       if (subjectIndex !== -1) {
         setCurrentProjectIndex(subjectIndex)
         setTimeout(() => {
@@ -223,7 +286,7 @@ function HomePage({ onStartStudying, setCurrentView, selectedSubject, customThum
         }, 100)
       }
     }
-  }, [selectedSubject])
+  }, [selectedSubject, allProjects])
 
   return (
     <div className="relative w-full h-screen overflow-hidden bg-background">
@@ -253,15 +316,38 @@ function HomePage({ onStartStudying, setCurrentView, selectedSubject, customThum
         </div>
       </header>
 
-      {/* Main feed */}
-      <div ref={feedRef} className="h-full overflow-y-auto scroll-smooth" style={{ scrollSnapType: "y mandatory" }}>
-        {pastProjects.map((project, index) => (
-          <div key={project.id} className="h-screen" style={{ scrollSnapAlign: "start" }}>
+        {/* Main feed */}
+        <div 
+          ref={feedRef} 
+          className="h-full overflow-y-auto scroll-smooth snap-y snap-mandatory" 
+          style={{ 
+            scrollSnapType: "y mandatory",
+            scrollBehavior: "smooth",
+            WebkitOverflowScrolling: "touch"
+          }}
+          onWheel={handleWheel}
+          onTouchStart={handleTouchStart}
+        >
+          {allProjects.map((project, index) => (
+            <div 
+              key={project.id} 
+              className="h-screen w-full snap-start snap-always flex-shrink-0" 
+              style={{ 
+                scrollSnapAlign: "start",
+                minHeight: "100vh"
+              }}
+            >
             <motion.div
               initial={{ y: "6vh", opacity: 0 }}
               animate={{ y: 0, opacity: 1 }}
               transition={{ duration: 0.36, ease: [0.2, 0.8, 0.2, 1] }}
-              className="relative w-full h-screen flex flex-col justify-center p-4 pb-32"
+              className="relative w-full h-screen flex flex-col justify-center p-4 pb-32 bg-gradient-to-br from-background via-background to-muted/20 rounded-2xl mx-2 my-1 shadow-2xl border border-border/50"
+              style={{
+                background: `linear-gradient(135deg, 
+                  hsl(var(--background)) 0%, 
+                  hsl(var(--background)) 50%, 
+                  hsl(var(--muted) / 0.1) 100%)`
+              }}
             >
               {/* Background image with improved contrast */}
               <div className="absolute inset-0">
@@ -289,6 +375,12 @@ function HomePage({ onStartStudying, setCurrentView, selectedSubject, customThum
                     <span>{project.difficultyEmoji}</span>
                     {project.difficulty}
                   </span>
+                  {project.isImported && (
+                    <span className="text-xs px-2 py-1 rounded-full bg-primary/20 text-primary flex items-center gap-1">
+                      <span>✨</span>
+                      Imported
+                    </span>
+                  )}
                 </motion.div>
 
                 {/* Title */}
@@ -372,38 +464,48 @@ function HomePage({ onStartStudying, setCurrentView, selectedSubject, customThum
       <div className="absolute right-4 top-1/2 -translate-y-1/2 z-40 flex flex-col gap-4">
         <ActionButton 
           icon={Heart} 
-          count={pastProjects[currentProjectIndex]?.likes || 0} 
-          active={likedProjects.has(pastProjects[currentProjectIndex]?.id)}
-          onClick={() => toggleLike(pastProjects[currentProjectIndex]?.id)}
+          count={allProjects[currentProjectIndex]?.likes || 0} 
+          active={likedProjects.has(allProjects[currentProjectIndex]?.id)}
+          onClick={() => toggleLike(allProjects[currentProjectIndex]?.id)}
           emoji="❤️" 
         />
         <ActionButton 
           icon={Trophy} 
-          count={pastProjects[currentProjectIndex]?.completedQuestions || 0} 
+          count={allProjects[currentProjectIndex]?.completedQuestions || 0} 
           emoji="🏆" 
         />
         <ActionButton 
           icon={Share} 
           count={0} 
-          onClick={() => handleShare(pastProjects[currentProjectIndex])}
+          onClick={() => handleShare(allProjects[currentProjectIndex])}
           emoji="📤" 
         />
         <ActionButton 
           icon={Bookmark} 
           count={0} 
-          active={bookmarkedProjects.has(pastProjects[currentProjectIndex]?.id)}
-          onClick={() => toggleBookmark(pastProjects[currentProjectIndex]?.id)}
+          active={bookmarkedProjects.has(allProjects[currentProjectIndex]?.id)}
+          onClick={() => toggleBookmark(allProjects[currentProjectIndex]?.id)}
           emoji="⭐" 
         />
       </div>
 
       {/* Progress indicator */}
       <div className="absolute left-4 top-1/2 -translate-y-1/2 z-40">
-        <div className="flex flex-col gap-2">
-          {pastProjects.map((_, index) => (
+        <div className="flex flex-col gap-3">
+          {allProjects.map((_, index) => (
             <div
               key={index}
-              className={`w-1 h-8 rounded-full transition-colors ${index === currentProjectIndex ? "bg-primary" : "bg-muted"}`}
+              className={`w-1.5 h-12 rounded-full transition-all duration-500 ease-out ${
+                index === currentProjectIndex
+                  ? "bg-primary scale-125 shadow-lg shadow-primary/50"
+                  : index === currentProjectIndex - 1 || index === currentProjectIndex + 1
+                  ? "bg-primary/60 scale-110"
+                  : "bg-muted-foreground/20 hover:bg-muted-foreground/40"
+              }`}
+              style={{
+                transform: index === currentProjectIndex ? 'scaleY(1.2)' : 'scaleY(1)',
+                boxShadow: index === currentProjectIndex ? '0 0 20px hsl(var(--primary) / 0.5)' : 'none'
+              }}
             />
           ))}
         </div>
@@ -419,7 +521,7 @@ function HomePage({ onStartStudying, setCurrentView, selectedSubject, customThum
           <Search className="w-6 h-6 text-muted-foreground" />
           <span className="text-xs">🔍</span>
         </button>
-        <button onClick={() => alert('Create new content coming soon! ✨')} className="w-12 h-12 rounded-full bg-primary flex items-center justify-center relative">
+        <button onClick={onImportClick} className="w-12 h-12 rounded-full bg-primary flex items-center justify-center relative">
           <Plus className="w-6 h-6 text-primary-foreground" />
           <span className="absolute -top-1 -right-1 text-xs">✨</span>
         </button>
@@ -469,7 +571,7 @@ function StudyCard({ card, isActive, onAnswer }: StudyCardProps) {
         }, 2500) // Wait for confetti animation
       }
     } else if (card.type === "short" && userAnswer.trim()) {
-      const correct = userAnswer.toLowerCase().trim() === card.answer.toLowerCase()
+      const correct = userAnswer.toLowerCase().trim() === (card.answer || '').toLowerCase()
       setIsCorrect(correct)
       setShowResult(true)
       onAnswer(correct)
@@ -543,7 +645,7 @@ function StudyCard({ card, isActive, onAnswer }: StudyCardProps) {
           className="space-y-3 mb-6"
         >
           {card.type === "mcq" ? (
-            card.options.map((option, index) => (
+            (card.options || []).map((option, index) => (
               <Button
                 key={index}
                 variant={selectedAnswer === index ? "default" : "outline"}
@@ -717,10 +819,11 @@ function StudyCard({ card, isActive, onAnswer }: StudyCardProps) {
   )
 }
 
-function SearchPage({ onBack, setCurrentView, onSelectSubject }: { 
+function SearchPage({ onBack, setCurrentView, onSelectSubject, onImportClick }: { 
   onBack: () => void; 
   setCurrentView: (view: "home" | "study" | "profile" | "search" | "notifications") => void;
   onSelectSubject: (subject: string) => void;
+  onImportClick: () => void;
 }) {
   const [searchQuery, setSearchQuery] = useState("")
   const [searchResults] = useState([
@@ -764,6 +867,7 @@ function SearchPage({ onBack, setCurrentView, onSelectSubject }: {
       setCurrentView("home")
     }
   }
+
 
   return (
     <div className="relative w-full h-screen overflow-hidden bg-background">
@@ -899,9 +1003,9 @@ function SearchPage({ onBack, setCurrentView, onSelectSubject }: {
           <Search className="w-6 h-6 text-primary" />
           <span className="text-xs">🔍</span>
         </button>
-        <button onClick={() => alert('Create new content coming soon! ✨')} className="w-12 h-12 rounded-full bg-primary flex items-center justify-center relative">
-          <Plus className="w-6 h-6 text-primary-foreground" />
-          <span className="absolute -top-1 -right-1 text-xs">✨</span>
+        <button onClick={onImportClick} className="w-12 h-12 rounded-full bg-primary flex items-center justify-center relative hover:scale-105 transition-transform duration-200 group">
+          <Plus className="w-6 h-6 text-primary-foreground group-hover:rotate-90 transition-transform duration-300" />
+          <span className="absolute -top-1 -right-1 text-xs animate-pulse">✨</span>
         </button>
         <button onClick={() => setCurrentView("notifications")} className="flex flex-col items-center gap-1">
           <Bell className="w-6 h-6 text-muted-foreground" />
@@ -916,7 +1020,7 @@ function SearchPage({ onBack, setCurrentView, onSelectSubject }: {
   )
 }
 
-function NotificationsPage({ onBack, setCurrentView }: { onBack: () => void; setCurrentView: (view: "home" | "study" | "profile" | "search" | "notifications") => void }) {
+function NotificationsPage({ onBack, setCurrentView, onImportClick }: { onBack: () => void; setCurrentView: (view: "home" | "study" | "profile" | "search" | "notifications") => void; onImportClick: () => void }) {
   const [notifications] = useState([
     {
       id: 1,
@@ -1067,9 +1171,9 @@ function NotificationsPage({ onBack, setCurrentView }: { onBack: () => void; set
           <Search className="w-6 h-6 text-muted-foreground" />
           <span className="text-xs">🔍</span>
         </button>
-        <button onClick={() => alert('Create new content coming soon! ✨')} className="w-12 h-12 rounded-full bg-primary flex items-center justify-center relative">
-          <Plus className="w-6 h-6 text-primary-foreground" />
-          <span className="absolute -top-1 -right-1 text-xs">✨</span>
+        <button onClick={onImportClick} className="w-12 h-12 rounded-full bg-primary flex items-center justify-center relative hover:scale-105 transition-transform duration-200 group">
+          <Plus className="w-6 h-6 text-primary-foreground group-hover:rotate-90 transition-transform duration-300" />
+          <span className="absolute -top-1 -right-1 text-xs animate-pulse">✨</span>
         </button>
         <button onClick={() => setCurrentView("notifications")} className="flex flex-col items-center gap-1">
           <Bell className="w-6 h-6 text-primary" />
@@ -1084,7 +1188,7 @@ function NotificationsPage({ onBack, setCurrentView }: { onBack: () => void; set
   )
 }
 
-function ProfilePage({ onBack, setCurrentView }: { onBack: () => void; setCurrentView: (view: "home" | "study" | "profile" | "search" | "notifications") => void }) {
+function ProfilePage({ onBack, setCurrentView, onImportClick }: { onBack: () => void; setCurrentView: (view: "home" | "study" | "profile" | "search" | "notifications") => void; onImportClick: () => void }) {
   const [userStats] = useState({
     totalXP: 2450,
     streak: 15,
@@ -1103,6 +1207,7 @@ function ProfilePage({ onBack, setCurrentView }: { onBack: () => void; setCurren
       { name: "Perfectionist", description: "Get 100% accuracy in any subject", icon: "💯", unlocked: false },
     ]
   })
+
 
   return (
     <div className="relative w-full h-screen overflow-hidden bg-background">
@@ -1209,15 +1314,15 @@ function ProfilePage({ onBack, setCurrentView }: { onBack: () => void; setCurren
           <Home className="w-6 h-6 text-muted-foreground" />
           <span className="text-xs">🏠</span>
         </button>
-        <button onClick={() => alert('Search functionality coming soon! 🔍')} className="flex flex-col items-center gap-1">
+        <button onClick={() => setCurrentView("search")} className="flex flex-col items-center gap-1">
           <Search className="w-6 h-6 text-muted-foreground" />
           <span className="text-xs">🔍</span>
         </button>
-        <button onClick={() => alert('Create new content coming soon! ✨')} className="w-12 h-12 rounded-full bg-primary flex items-center justify-center relative">
-          <Plus className="w-6 h-6 text-primary-foreground" />
-          <span className="absolute -top-1 -right-1 text-xs">✨</span>
+        <button onClick={onImportClick} className="w-12 h-12 rounded-full bg-primary flex items-center justify-center relative hover:scale-105 transition-transform duration-200 group">
+          <Plus className="w-6 h-6 text-primary-foreground group-hover:rotate-90 transition-transform duration-300" />
+          <span className="absolute -top-1 -right-1 text-xs animate-pulse">✨</span>
         </button>
-        <button onClick={() => alert('Notifications coming soon! 🔔')} className="flex flex-col items-center gap-1">
+        <button onClick={() => setCurrentView("notifications")} className="flex flex-col items-center gap-1">
           <Bell className="w-6 h-6 text-muted-foreground" />
           <span className="text-xs">🔔</span>
         </button>
@@ -1237,11 +1342,13 @@ export default function StudyApp() {
   const [currentIndex, setCurrentIndex] = useState(0)
   const [customThumbnail, setCustomThumbnail] = useState<string | null>(null)
   const [showUploadModal, setShowUploadModal] = useState(false)
+  const [showImportModal, setShowImportModal] = useState(false)
   const [score, setScore] = useState(2450)
   const [streak, setStreak] = useState(15)
   const [liked, setLiked] = useState<Set<number>>(new Set())
   const [bookmarked, setBookmarked] = useState<Set<number>>(new Set())
   const [aiHelped, setAiHelped] = useState<Set<number>>(new Set())
+  const [importedDecks, setImportedDecks] = useState<any[]>([])
   const feedRef = useRef<HTMLDivElement>(null)
 
   const handleAnswer = (correct: boolean) => {
@@ -1274,6 +1381,61 @@ export default function StudyApp() {
     if (newIndex !== currentIndex && newIndex >= 0 && newIndex < studyCards.length) {
       setCurrentIndex(newIndex)
     }
+  }
+
+  // Enhanced scroll with momentum for StudyCard
+  const handleWheel = (e: React.WheelEvent) => {
+    e.preventDefault()
+    if (feedRef.current) {
+      const delta = e.deltaY
+      const cardHeight = window.innerHeight
+      
+      if (Math.abs(delta) > 50) {
+        const direction = delta > 0 ? 1 : -1
+        const targetIndex = Math.max(0, Math.min(studyCards.length - 1, currentIndex + direction))
+        const targetScroll = targetIndex * cardHeight
+        
+        feedRef.current.scrollTo({
+          top: targetScroll,
+          behavior: 'smooth'
+        })
+      }
+    }
+  }
+
+  // Touch gesture handling for StudyCard
+  const handleTouchStart = (e: React.TouchEvent) => {
+    const touch = e.touches[0]
+    const startY = touch.clientY
+    
+    const handleTouchMove = (e: TouchEvent) => {
+      e.preventDefault()
+      const touch = e.touches[0]
+      const deltaY = touch.clientY - startY
+      const cardHeight = window.innerHeight
+      
+      if (Math.abs(deltaY) > cardHeight * 0.3) {
+        const direction = deltaY > 0 ? -1 : 1
+        const targetIndex = Math.max(0, Math.min(studyCards.length - 1, currentIndex + direction))
+        const targetScroll = targetIndex * cardHeight
+        
+        feedRef.current?.scrollTo({
+          top: targetScroll,
+          behavior: 'smooth'
+        })
+        
+        document.removeEventListener('touchmove', handleTouchMove)
+        document.removeEventListener('touchend', handleTouchEnd)
+      }
+    }
+    
+    const handleTouchEnd = () => {
+      document.removeEventListener('touchmove', handleTouchMove)
+      document.removeEventListener('touchend', handleTouchEnd)
+    }
+    
+    document.addEventListener('touchmove', handleTouchMove, { passive: false })
+    document.addEventListener('touchend', handleTouchEnd)
   }
 
   const toggleLike = (cardId: number) => {
@@ -1325,6 +1487,27 @@ export default function StudyApp() {
     }
   }
 
+  const handleImportComplete = (deckData: any) => {
+    // Add the new deck to the imported decks
+    const newDeck = {
+      id: Date.now(), // Simple ID generation
+      ...deckData,
+      progress: 0,
+      completedQuestions: 0,
+      totalQuestions: deckData.totalCards,
+      subject: deckData.subject || "General",
+      emoji: "📚",
+      difficulty: "Medium",
+      difficultyEmoji: "🟡",
+      likes: 0,
+      timeSpent: "0h 0m",
+      isImported: true
+    }
+    
+    setImportedDecks(prev => [newDeck, ...prev])
+    setScore(prev => prev + 50) // Bonus XP for importing
+  }
+
   useEffect(() => {
     const feedElement = feedRef.current
     if (feedElement) {
@@ -1355,6 +1538,8 @@ export default function StudyApp() {
           selectedSubject={selectedSubject}
           customThumbnail={customThumbnail}
           onUploadThumbnail={() => setShowUploadModal(true)}
+          importedDecks={importedDecks}
+          onImportClick={() => setShowImportModal(true)}
         />
         {showUploadModal && (
           <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm">
@@ -1386,25 +1571,82 @@ export default function StudyApp() {
             </div>
           </div>
         )}
+        {showImportModal && (
+          <ImportComponent
+            onClose={() => setShowImportModal(false)}
+            onImportComplete={handleImportComplete}
+          />
+        )}
       </>
     )
   }
 
   if (currentView === "profile") {
-    return <ProfilePage onBack={() => setCurrentView("home")} setCurrentView={setCurrentView} />
+    return (
+      <>
+        <ProfilePage 
+          onBack={() => setCurrentView("home")} 
+          setCurrentView={setCurrentView} 
+          onImportClick={() => setShowImportModal(true)}
+        />
+        {showImportModal && (
+          <ImportComponent
+            onClose={() => setShowImportModal(false)}
+            onImportComplete={handleImportComplete}
+          />
+        )}
+      </>
+    )
   }
 
   if (currentView === "search") {
-    return <SearchPage onBack={() => setCurrentView("home")} setCurrentView={setCurrentView} onSelectSubject={setSelectedSubject} />
+    return (
+      <>
+        <SearchPage 
+          onBack={() => setCurrentView("home")} 
+          setCurrentView={setCurrentView} 
+          onSelectSubject={setSelectedSubject}
+          onImportClick={() => setShowImportModal(true)}
+        />
+        {showImportModal && (
+          <ImportComponent
+            onClose={() => setShowImportModal(false)}
+            onImportComplete={handleImportComplete}
+          />
+        )}
+      </>
+    )
   }
 
   if (currentView === "notifications") {
-    return <NotificationsPage onBack={() => setCurrentView("home")} setCurrentView={setCurrentView} />
+    return (
+      <>
+        <NotificationsPage 
+          onBack={() => setCurrentView("home")} 
+          setCurrentView={setCurrentView}
+          onImportClick={() => setShowImportModal(true)}
+        />
+        {showImportModal && (
+          <ImportComponent
+            onClose={() => setShowImportModal(false)}
+            onImportComplete={handleImportComplete}
+          />
+        )}
+      </>
+    )
   }
 
   return (
     <div className="relative w-full h-screen overflow-hidden bg-background">
       <button data-next-card onClick={goToNextCard} className="hidden" aria-hidden="true" />
+      
+      {/* Import Modal */}
+      {showImportModal && (
+        <ImportComponent
+          onClose={() => setShowImportModal(false)}
+          onImportComplete={handleImportComplete}
+        />
+      )}
 
       {/* Header */}
       <header className="absolute top-0 left-0 right-0 z-50 flex items-center justify-between p-4 glass-effect">
@@ -1428,10 +1670,29 @@ export default function StudyApp() {
       </header>
 
       {/* Main feed */}
-      <div ref={feedRef} className="h-full overflow-y-auto scroll-smooth" style={{ scrollSnapType: "y mandatory" }}>
+      <div 
+        ref={feedRef} 
+        className="h-full overflow-y-auto scroll-smooth snap-y snap-mandatory" 
+        style={{ 
+          scrollSnapType: "y mandatory",
+          scrollBehavior: "smooth",
+          WebkitOverflowScrolling: "touch"
+        }}
+        onWheel={handleWheel}
+        onTouchStart={handleTouchStart}
+      >
         {studyCards.map((card, index) => (
-          <div key={card.id} className="h-screen" style={{ scrollSnapAlign: "start" }}>
-            <StudyCard card={card} isActive={index === currentIndex} onAnswer={handleAnswer} />
+          <div 
+            key={card.id} 
+            className="h-screen w-full snap-start snap-always flex-shrink-0" 
+            style={{ 
+              scrollSnapAlign: "start",
+              minHeight: "100vh"
+            }}
+          >
+            <div className="relative w-full h-screen flex flex-col justify-center p-4 pb-32 bg-gradient-to-br from-background via-background to-muted/20 rounded-2xl mx-2 my-1 shadow-2xl border border-border/50">
+              <StudyCard card={card} isActive={index === currentIndex} onAnswer={handleAnswer} />
+            </div>
           </div>
         ))}
       </div>
@@ -1464,11 +1725,21 @@ export default function StudyApp() {
 
       {/* Progress indicator */}
       <div className="absolute left-4 top-1/2 -translate-y-1/2 z-40">
-        <div className="flex flex-col gap-2">
+        <div className="flex flex-col gap-3">
           {studyCards.map((_, index) => (
             <div
               key={index}
-              className={`w-1 h-8 rounded-full transition-colors ${index === currentIndex ? "bg-primary" : "bg-muted"}`}
+              className={`w-1.5 h-12 rounded-full transition-all duration-500 ease-out ${
+                index === currentIndex
+                  ? "bg-primary scale-125 shadow-lg shadow-primary/50"
+                  : index === currentIndex - 1 || index === currentIndex + 1
+                  ? "bg-primary/60 scale-110"
+                  : "bg-muted-foreground/20 hover:bg-muted-foreground/40"
+              }`}
+              style={{
+                transform: index === currentIndex ? 'scaleY(1.2)' : 'scaleY(1)',
+                boxShadow: index === currentIndex ? '0 0 20px hsl(var(--primary) / 0.5)' : 'none'
+              }}
             />
           ))}
         </div>
@@ -1484,9 +1755,9 @@ export default function StudyApp() {
           <Search className="w-6 h-6 text-muted-foreground" />
           <span className="text-xs">🔍</span>
         </button>
-        <button onClick={() => alert('Create new content coming soon! ✨')} className="w-12 h-12 rounded-full bg-primary flex items-center justify-center relative">
-          <Plus className="w-6 h-6 text-primary-foreground" />
-          <span className="absolute -top-1 -right-1 text-xs">✨</span>
+        <button onClick={() => setShowImportModal(true)} className="w-12 h-12 rounded-full bg-primary flex items-center justify-center relative hover:scale-105 transition-transform duration-200 group">
+          <Plus className="w-6 h-6 text-primary-foreground group-hover:rotate-90 transition-transform duration-300" />
+          <span className="absolute -top-1 -right-1 text-xs animate-pulse">✨</span>
         </button>
         <button onClick={() => setCurrentView("notifications")} className="flex flex-col items-center gap-1">
           <Bell className="w-6 h-6 text-muted-foreground" />

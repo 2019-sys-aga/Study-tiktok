@@ -4,12 +4,21 @@ import { createClient } from '@supabase/supabase-js'
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://fxaizehgwbprptiwxiulf.supabase.co'
 const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZ4YWl6ZWhnd2JycHRpd3hpdWxmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTkxMDA1MzcsImV4cCI6MjA3NDY3NjUzN30.BrAach3P-monfDdlrrYLDEeKtQPPOQDq5uV8f-7Z7Po'
 
+// Debug logging
+console.log('Supabase URL:', supabaseUrl)
+console.log('Supabase Key:', supabaseAnonKey ? 'Present' : 'Missing')
+
 // Create Supabase client
 export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
   auth: {
     autoRefreshToken: true,
     persistSession: true,
     detectSessionInUrl: true
+  },
+  global: {
+    headers: {
+      'X-Client-Info': 'study-tiktok-app'
+    }
   }
 })
 
@@ -86,6 +95,43 @@ export interface StudyCard {
   difficulty: 'Easy' | 'Medium' | 'Advanced'
   created_at: string
   updated_at: string
+}
+
+export interface ImportedContent {
+  id: string
+  user_id: string
+  deck_id: string
+  original_filename?: string
+  file_type: 'pdf' | 'docx' | 'pptx' | 'text'
+  file_size?: number
+  extracted_text?: string
+  processing_status: 'pending' | 'processing' | 'completed' | 'failed'
+  ai_summary?: string
+  generated_topics?: string[]
+  created_at: string
+  updated_at: string
+}
+
+export interface UserAchievement {
+  id: string
+  user_id: string
+  achievement_type: string
+  title: string
+  description?: string
+  icon?: string
+  unlocked_at: string
+}
+
+export interface StudySession {
+  id: string
+  user_id: string
+  deck_id: string
+  session_duration?: number
+  cards_studied: number
+  correct_answers: number
+  xp_earned: number
+  started_at: string
+  completed_at?: string
 }
 
 // Authentication functions
@@ -201,6 +247,83 @@ export const db = {
       .select('*')
       .eq('deck_id', deckId)
       .order('created_at', { ascending: true })
+    return { data, error }
+  },
+
+  // Imported content
+  createImportedContent: async (content: Partial<ImportedContent>) => {
+    const { data, error } = await supabase
+      .from('imported_content')
+      .insert(content)
+      .select()
+      .single()
+    return { data, error }
+  },
+
+  getImportedContent: async (userId: string) => {
+    const { data, error } = await supabase
+      .from('imported_content')
+      .select('*')
+      .eq('user_id', userId)
+      .order('created_at', { ascending: false })
+    return { data, error }
+  },
+
+  updateImportedContent: async (id: string, updates: Partial<ImportedContent>) => {
+    const { data, error } = await supabase
+      .from('imported_content')
+      .update(updates)
+      .eq('id', id)
+      .select()
+      .single()
+    return { data, error }
+  },
+
+  // User achievements
+  getUserAchievements: async (userId: string) => {
+    const { data, error } = await supabase
+      .from('user_achievements')
+      .select('*')
+      .eq('user_id', userId)
+      .order('unlocked_at', { ascending: false })
+    return { data, error }
+  },
+
+  createUserAchievement: async (achievement: Partial<UserAchievement>) => {
+    const { data, error } = await supabase
+      .from('user_achievements')
+      .insert(achievement)
+      .select()
+      .single()
+    return { data, error }
+  },
+
+  // Study sessions
+  createStudySession: async (session: Partial<StudySession>) => {
+    const { data, error } = await supabase
+      .from('study_sessions')
+      .insert(session)
+      .select()
+      .single()
+    return { data, error }
+  },
+
+  updateStudySession: async (id: string, updates: Partial<StudySession>) => {
+    const { data, error } = await supabase
+      .from('study_sessions')
+      .update(updates)
+      .eq('id', id)
+      .select()
+      .single()
+    return { data, error }
+  },
+
+  getUserStudySessions: async (userId: string) => {
+    const { data, error } = await supabase
+      .from('study_sessions')
+      .select('*')
+      .eq('user_id', userId)
+      .order('started_at', { ascending: false })
     return { data, error }
   }
 }

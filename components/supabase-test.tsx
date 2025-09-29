@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { supabase, auth } from '@/lib/supabase'
+import { supabase } from '@/lib/supabase'
 
 export default function SupabaseTest() {
   const [connectionStatus, setConnectionStatus] = useState<'testing' | 'connected' | 'error'>('testing')
@@ -41,11 +41,17 @@ export default function SupabaseTest() {
 
   const testAuth = async () => {
     try {
-      const { data, error } = await auth.signUp('test@example.com', 'testpassword123')
+      console.log('Testing auth with Supabase client...')
+      const { data, error } = await supabase.auth.signUp({
+        email: 'test@example.com',
+        password: 'testpassword123'
+      })
       if (error) throw error
       console.log('Auth test successful:', data)
+      alert('Auth test successful! Check console for details.')
     } catch (err: any) {
-      console.error('Auth test failed:', err.message)
+      console.error('Auth test failed:', err)
+      alert(`Auth test failed: ${err.message}`)
     }
   }
 
