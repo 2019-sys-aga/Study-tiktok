@@ -166,35 +166,43 @@ function HomePage({ onStartStudying, setCurrentView, selectedSubject, customThum
     e.preventDefault()
     if (feedRef.current) {
       const delta = e.deltaY
-      const currentScroll = feedRef.current.scrollTop
       const cardHeight = window.innerHeight
       
-      if (Math.abs(delta) > 50) { // Threshold for scroll
+      if (Math.abs(delta) > 30) { // Lower threshold for more responsive scrolling
         const direction = delta > 0 ? 1 : -1
         const targetIndex = Math.max(0, Math.min(allProjects.length - 1, currentProjectIndex + direction))
         const targetScroll = targetIndex * cardHeight
         
+        // Smooth scroll with easing
         feedRef.current.scrollTo({
           top: targetScroll,
           behavior: 'smooth'
         })
+        
+        // Update index immediately for better UX
+        setCurrentProjectIndex(targetIndex)
       }
     }
   }
 
-  // Touch gesture handling
+  // Enhanced touch gesture handling
   const handleTouchStart = (e: React.TouchEvent) => {
     const touch = e.touches[0]
     const startY = touch.clientY
-    const startScroll = feedRef.current?.scrollTop || 0
+    const startTime = Date.now()
     
     const handleTouchMove = (e: TouchEvent) => {
       e.preventDefault()
       const touch = e.touches[0]
       const deltaY = touch.clientY - startY
+      const deltaTime = Date.now() - startTime
       const cardHeight = window.innerHeight
       
-      if (Math.abs(deltaY) > cardHeight * 0.3) { // 30% threshold
+      // More responsive threshold and velocity consideration
+      const velocity = Math.abs(deltaY) / deltaTime
+      const threshold = cardHeight * 0.2 // Reduced to 20% for more responsive scrolling
+      
+      if (Math.abs(deltaY) > threshold || velocity > 0.5) {
         const direction = deltaY > 0 ? -1 : 1
         const targetIndex = Math.max(0, Math.min(allProjects.length - 1, currentProjectIndex + direction))
         const targetScroll = targetIndex * cardHeight
@@ -203,6 +211,9 @@ function HomePage({ onStartStudying, setCurrentView, selectedSubject, customThum
           top: targetScroll,
           behavior: 'smooth'
         })
+        
+        // Update index immediately
+        setCurrentProjectIndex(targetIndex)
         
         document.removeEventListener('touchmove', handleTouchMove)
         document.removeEventListener('touchend', handleTouchEnd)
@@ -289,7 +300,16 @@ function HomePage({ onStartStudying, setCurrentView, selectedSubject, customThum
   }, [selectedSubject, allProjects])
 
   return (
-    <div className="relative w-full h-screen overflow-hidden bg-background">
+    <div 
+      className="relative w-full h-screen overflow-hidden bg-background"
+      style={{
+        height: "100vh",
+        width: "100vw",
+        maxHeight: "100vh",
+        maxWidth: "100vw",
+        overflow: "hidden"
+      }}
+    >
       {/* Header */}
       <header className="absolute top-0 left-0 right-0 z-50 flex items-center justify-between p-4 glass-effect">
         <div className="flex items-center gap-3">
@@ -319,11 +339,14 @@ function HomePage({ onStartStudying, setCurrentView, selectedSubject, customThum
         {/* Main feed */}
         <div 
           ref={feedRef} 
-          className="h-full overflow-y-auto scroll-smooth snap-y snap-mandatory" 
+          className="h-screen w-full overflow-hidden snap-y snap-mandatory" 
           style={{ 
             scrollSnapType: "y mandatory",
             scrollBehavior: "smooth",
-            WebkitOverflowScrolling: "touch"
+            WebkitOverflowScrolling: "touch",
+            height: "100vh",
+            width: "100vw",
+            position: "relative"
           }}
           onWheel={handleWheel}
           onTouchStart={handleTouchStart}
@@ -341,12 +364,16 @@ function HomePage({ onStartStudying, setCurrentView, selectedSubject, customThum
               initial={{ y: "6vh", opacity: 0 }}
               animate={{ y: 0, opacity: 1 }}
               transition={{ duration: 0.36, ease: [0.2, 0.8, 0.2, 1] }}
-              className="relative w-full h-screen flex flex-col justify-center p-4 pb-32 bg-gradient-to-br from-background via-background to-muted/20 rounded-2xl mx-2 my-1 shadow-2xl border border-border/50"
+              className="relative w-full h-screen flex flex-col justify-center p-4 pb-24 bg-gradient-to-br from-background via-background to-muted/20 rounded-2xl shadow-2xl border border-border/50"
               style={{
                 background: `linear-gradient(135deg, 
                   hsl(var(--background)) 0%, 
                   hsl(var(--background)) 50%, 
-                  hsl(var(--muted) / 0.1) 100%)`
+                  hsl(var(--muted) / 0.1) 100%)`,
+                height: "100vh",
+                width: "100%",
+                maxHeight: "100vh",
+                overflow: "hidden"
               }}
             >
               {/* Background image with improved contrast */}
@@ -1390,7 +1417,7 @@ export default function StudyApp() {
       const delta = e.deltaY
       const cardHeight = window.innerHeight
       
-      if (Math.abs(delta) > 50) {
+      if (Math.abs(delta) > 30) { // Lower threshold for more responsive scrolling
         const direction = delta > 0 ? 1 : -1
         const targetIndex = Math.max(0, Math.min(studyCards.length - 1, currentIndex + direction))
         const targetScroll = targetIndex * cardHeight
@@ -1399,22 +1426,31 @@ export default function StudyApp() {
           top: targetScroll,
           behavior: 'smooth'
         })
+        
+        // Update index immediately for better UX
+        setCurrentIndex(targetIndex)
       }
     }
   }
 
-  // Touch gesture handling for StudyCard
+  // Enhanced touch gesture handling for StudyCard
   const handleTouchStart = (e: React.TouchEvent) => {
     const touch = e.touches[0]
     const startY = touch.clientY
+    const startTime = Date.now()
     
     const handleTouchMove = (e: TouchEvent) => {
       e.preventDefault()
       const touch = e.touches[0]
       const deltaY = touch.clientY - startY
+      const deltaTime = Date.now() - startTime
       const cardHeight = window.innerHeight
       
-      if (Math.abs(deltaY) > cardHeight * 0.3) {
+      // More responsive threshold and velocity consideration
+      const velocity = Math.abs(deltaY) / deltaTime
+      const threshold = cardHeight * 0.2 // Reduced to 20% for more responsive scrolling
+      
+      if (Math.abs(deltaY) > threshold || velocity > 0.5) {
         const direction = deltaY > 0 ? -1 : 1
         const targetIndex = Math.max(0, Math.min(studyCards.length - 1, currentIndex + direction))
         const targetScroll = targetIndex * cardHeight
@@ -1423,6 +1459,9 @@ export default function StudyApp() {
           top: targetScroll,
           behavior: 'smooth'
         })
+        
+        // Update index immediately
+        setCurrentIndex(targetIndex)
         
         document.removeEventListener('touchmove', handleTouchMove)
         document.removeEventListener('touchend', handleTouchEnd)
@@ -1672,11 +1711,14 @@ export default function StudyApp() {
       {/* Main feed */}
       <div 
         ref={feedRef} 
-        className="h-full overflow-y-auto scroll-smooth snap-y snap-mandatory" 
+        className="h-screen w-full overflow-hidden snap-y snap-mandatory" 
         style={{ 
           scrollSnapType: "y mandatory",
           scrollBehavior: "smooth",
-          WebkitOverflowScrolling: "touch"
+          WebkitOverflowScrolling: "touch",
+          height: "100vh",
+          width: "100vw",
+          position: "relative"
         }}
         onWheel={handleWheel}
         onTouchStart={handleTouchStart}
@@ -1690,7 +1732,15 @@ export default function StudyApp() {
               minHeight: "100vh"
             }}
           >
-            <div className="relative w-full h-screen flex flex-col justify-center p-4 pb-32 bg-gradient-to-br from-background via-background to-muted/20 rounded-2xl mx-2 my-1 shadow-2xl border border-border/50">
+            <div 
+              className="relative w-full h-screen flex flex-col justify-center p-4 pb-24 bg-gradient-to-br from-background via-background to-muted/20 rounded-2xl shadow-2xl border border-border/50"
+              style={{
+                height: "100vh",
+                width: "100%",
+                maxHeight: "100vh",
+                overflow: "hidden"
+              }}
+            >
               <StudyCard card={card} isActive={index === currentIndex} onAnswer={handleAnswer} />
             </div>
           </div>
